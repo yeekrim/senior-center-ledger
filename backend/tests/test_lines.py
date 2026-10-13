@@ -1,0 +1,55 @@
+"""lines.py — 토큰 순서 기반 파싱의 edge 케이스."""
+
+from passbook.lines import is_amount, parse_line, parse_lines, tokenize
+
+
+def test_지출은_금액이_먼저():
+    row = parse_line("20260530 40정 ₩71,000 행복방앗간 ₩778,000 45000")
+    assert row["찾으신금액"] == "₩71,000"
+    assert row["맡기신금액"] is None
+    assert row["사용내역"] == "행복방앗간"
+
+
+def test_입금은_내역이_먼저():
+    row = parse_line("20260610 40정 승인취소-주식 ₩7,800 ₩564,940 45000")
+    assert row["맡기신금액"] == "₩7,800"
+    assert row["찾으신금액"] is None
+    assert row["사용내역"] == "승인취소-주식"
+
+
+def test_붙은_토큰_분리():
+    # 실제 사진에 '₩5,000농산물직거래장'처럼 금액과 상호가 한 덩어리인 줄이 있다
+    assert tokenize("₩5,000농산물직거래장")[:2] == ["₩5,000", "농산물직거래장"]
+    row = parse_line("20260530 40정 ₩5,000농산물직거래장 ₩741,000 45000")
+    assert row["찾으신금액"] == "₩5,000"
+    assert row["사용내역"] == "농산물직거래장"
+
+
+def test_숫자로_시작하는_내역은_금액이_아님():
+    # '2분기'가 금액으로 오인되면 입금이 지출로 뒤집힌다
+    assert not is_amount("2분기")
+    row = parse_line("20260320 40정 2분기 부식비 ₩849,000 ₩849,000 72519")
+    assert row["맡기신금액"] == "₩849,000"
+    assert row["사용내역"] == "2분기 부식비"
+
+
+def test_신규_개설_행은_거래가_아님():
+    assert parse_line("20260313 10유 신규 0 ₩0 중앙") is None
+
+
+def test_안내문과_헤더는_걸러짐():
+    lines = [
+        "보통예탁금",
+        "년월일 적요 찾으신금액 맡기신금액 잔액 거래점",
+        "우리 신협의 예탁금 및 적금은 법에 의거 원금과 소정의 이자를",
+        "20260530 40정 ₩71,000 행복방앗간 ₩778,000 45000",
+    ]
+    rows = parse_lines(lines)
+    assert len(rows) == 1
+    assert rows[0]["date"] == "20260530"
+
+
+def test_전체_fixture_거래_건수():
+    from data.sample_lines import SAMPLE_LINES
+    rows = parse_lines(SAMPLE_LINES)
+    assert len(rows) == 19

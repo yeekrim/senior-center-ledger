@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>통장 정리 도우미</title>
+<style>
+:root{
+  --band:#D7E3C3;        /* 통장 녹색 줄 — 이 화면의 바탕 성격 */
+  --paper:#EFEFE6;       /* 통장 종이 (차가운 미색) */
+  --rule:#8C9A7C;        /* 괘선 */
+  --ink:#161A17;         /* 인쇄 잉크 */
+  --ink-soft:#5B655B;
+  --seal:#A8231B;        /* 검인 — 확인이 필요한 곳에만 */
+  --stamp:#14506B;       /* 조작 */
+  --desk:#C9CDBC;        /* 통장이 놓인 바닥 */
+  --sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+/* display를 지정한 요소(.steps 등)에서 hidden 속성이 무시되는 것을 막는다 */
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--desk);color:var(--ink);font-family:var(--sans);font-size:20px;line-height:1.6;-webkit-text-size-adjust:100%}
+.app{max-width:960px;margin:0 auto;padding:0 16px 80px}
+
+/* ── 상단 ─────────────────────────────────── */
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:20px 4px 16px;flex-wrap:wrap}
+.brand b{font-size:19px;font-weight:800;letter-spacing:-.02em}
+.brand span{font-family:var(--mono);font-size:14px;color:var(--ink-soft)}
+.linkbtn{background:none;border:0;padding:8px 2px;font-size:17px;font-weight:700;color:var(--stamp);text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+
+.steps{display:flex;margin-bottom:18px;border:1px solid var(--rule);background:var(--paper)}
+.steps div{flex:1;padding:11px 8px;text-align:center;font-size:15px;font-weight:700;color:var(--ink-soft);border-right:1px solid var(--rule)}
+.steps div:last-child{border-right:0}
+.steps div.on{background:var(--ink);color:var(--paper)}
+.steps div.past{background:var(--band);color:var(--ink)}
+
+/* ── 종이 ─────────────────────────────────── */
+.sheet{background:var(--paper);border:1px solid var(--rule);box-shadow:0 2px 0 rgba(0,0,0,.14)}
+.sheet+.sheet{margin-top:18px}
+.sheet-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:18px 22px 14px;border-bottom:2px solid var(--ink)}
+.sheet-head h2{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:0}
+.sheet-head span{font-family:var(--mono);font-size:14px;color:var(--ink-soft)}
+.pad{padding:26px 22px}
+h1{font-size:clamp(30px,6vw,44px);font-weight:800;letter-spacing:-.03em;line-height:1.15;margin:0 0 12px}
+.lede{font-size:21px;margin:0;max-width:44ch}
+
+button{font:inherit;border-radius:0}
+.btn{min-height:60px;padding:15px 26px;font-size:19px;font-weight:700;border:2px solid var(--stamp);background:var(--stamp);color:#fff;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--stamp)}
+.btn.quiet{border-color:var(--rule);background:transparent;color:var(--ink-soft)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:hover:not(:disabled){opacity:.88}
+.btn:focus-visible,input:focus-visible,label.drop:focus-within{outline:4px solid var(--seal);outline-offset:3px}
+.acts{display:flex;flex-wrap:wrap;gap:12px}
+.foot{padding:0 22px 26px}
+
+/* ── 사진 올리기 ───────────────────────────── */
+label.drop{display:block;margin:0 22px 22px;padding:46px 20px;text-align:center;cursor:pointer;border:3px dashed var(--rule);background:repeating-linear-gradient(var(--band) 0 30px,transparent 30px 60px)}
+label.drop:hover,label.drop.over{border-color:var(--stamp)}
+label.drop strong{display:block;font-size:24px;font-weight:800;margin-bottom:8px}
+label.drop small{color:var(--ink-soft);font-size:18px}
+label.drop input{position:absolute;width:1px;height:1px;opacity:0}
+.shots{display:flex;flex-wrap:wrap;gap:12px;padding:0 22px 22px}
+.shot{width:104px;border:1px solid var(--rule);background:#fff;margin:0}
+.shot img{display:block;width:100%;height:132px;object-fit:cover}
+.shot p{margin:0;padding:6px;font-family:var(--mono);font-size:12px;color:var(--ink-soft);text-align:center}
+
+/* ── 읽는 중 ──────────────────────────────── */
+.tasks{list-style:none;margin:0 0 22px;padding:0}
+.tasks li{display:flex;align-items:center;gap:12px;padding:11px 0;font-size:19px;color:var(--ink-soft);border-bottom:1px solid rgba(140,154,124,.4)}
+.tasks li:last-child{border-bottom:0}
+.tasks li.on{color:var(--ink);font-weight:700}
+.tasks li.done{color:var(--ink)}
+.dot{width:13px;height:13px;border:2px solid var(--rule);flex:none}
+.tasks li.on .dot{background:var(--stamp);border-color:var(--stamp)}
+.tasks li.done .dot{background:var(--ink);border-color:var(--ink)}
+.print{border:1px solid var(--rule);background:var(--paper);min-height:180px;max-height:300px;overflow:hidden}
+.print div{font-family:var(--mono);font-size:15px;padding:7px 12px;white-space:pre;overflow:hidden;text-overflow:ellipsis}
+.print div:nth-child(odd){background:var(--band)}
+.print div.pending{font-family:var(--sans);white-space:normal;color:var(--ink-soft);background:none;padding:22px 16px}
+
+/* ── 거래 내역 ─────────────────────────────── */
+.cols,.rowline{display:grid;grid-template-columns:42px 118px 1fr 128px 132px;align-items:center;gap:10px}
+.cols{padding:11px 22px;border-bottom:1px solid var(--rule);font-family:var(--mono);font-size:14px;color:var(--ink-soft);font-weight:700}
+.cols .r{text-align:right}
+.row{border-bottom:1px solid rgba(140,154,124,.4);position:relative}
+.row:nth-child(odd) .rowline{background:var(--band)}
+.rowline{padding:14px 22px;min-height:62px}
+.num,.date,.amt,.bal{font-family:var(--mono);font-variant-numeric:tabular-nums;font-style:normal}
+.num{font-size:14px;color:var(--ink-soft)}
+.date{font-size:17px}
+.memo{font-size:19px;overflow-wrap:anywhere}
+.amt,.bal{text-align:right;font-size:19px}
+.amt.in{color:var(--stamp);font-weight:700}
+.bal{font-weight:700}
+.row.flag{border-left:10px solid var(--seal);background:var(--paper);box-shadow:0 8px 22px rgba(22,26,23,.2);z-index:2;margin:12px 0}
+.row.flag .rowline{background:transparent}
+.row.flag .bal{color:var(--seal)}
+.row.fixed{border-left:10px solid var(--stamp);box-shadow:none}
+.fix{padding:2px 22px 22px;border-top:1px dashed var(--rule)}
+.fix p{margin:14px 0 16px;font-size:20px;max-width:52ch}
+.fix .why{font-family:var(--mono);font-size:14px;color:var(--ink-soft);margin:14px 0 0}
+.manual{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-top:16px}
+.manual label{font-size:17px;color:var(--ink-soft);display:block;margin-bottom:6px}
+input[type=text]{font:inherit;font-size:20px;padding:13px 14px;min-height:58px;border:2px solid var(--rule);background:#fff;color:var(--ink);width:100%;max-width:300px}
+input.figure{font-family:var(--mono);max-width:230px}
+.callout{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;padding:18px 22px;background:var(--paper);border:2px solid var(--seal);border-left-width:10px;margin-bottom:16px}
+.callout.done{border-color:var(--stamp)}
+.callout p{margin:0;font-size:20px;font-weight:700}
+.callout.done p{color:var(--stamp)}
+
+/* ── 월별 정리 ─────────────────────────────── */
+.month{border-bottom:1px solid var(--rule)}
+.month:last-child{border-bottom:0}
+.mhead{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:baseline;padding:18px 22px 14px;background:var(--band)}
+.mhead h3{margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;min-width:96px}
+.mhead dl{display:flex;flex-wrap:wrap;gap:6px 22px;margin:0;font-size:18px}
+.mhead dt{display:inline;color:var(--ink-soft);margin-right:6px}
+.mhead dd{display:inline;margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:800}
+.mhead dd.in{color:var(--stamp)}
+.mline{display:grid;grid-template-columns:112px 1fr 132px;gap:12px;align-items:center;padding:11px 22px;border-top:1px solid rgba(140,154,124,.35);font-size:18px}
+.mline .d{font-family:var(--mono);font-size:16px;color:var(--ink-soft)}
+.mline .a{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700}
+.mline .a.in{color:var(--stamp)}
+.grand{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding:20px 22px;border-top:2px solid var(--ink);font-size:20px;font-weight:800}
+.grand span:last-child{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.note{margin:0;padding:18px 22px 26px;color:var(--ink-soft);font-size:17px}
+footer{padding:26px 4px;font-family:var(--mono);font-size:13px;color:var(--ink-soft)}
+
+@media (max-width:720px){
+  body{font-size:19px}
+  .cols{display:none}
+  .rowline{grid-template-columns:34px 1fr auto;grid-template-areas:"n d b" "n m b";row-gap:2px;padding:13px 14px}
+  .num{grid-area:n}.date{grid-area:d}.memo{grid-area:m}.bal{grid-area:b}
+  .amt{display:none}
+  .memo::after{content:attr(data-amt);display:block;font-family:var(--mono);font-size:17px;color:var(--ink-soft)}
+  .steps div{font-size:13px;padding:9px 4px}
+  .pad,.fix,.foot,.note,.mhead,.mline,.grand{padding-left:14px;padding-right:14px}
+  label.drop{margin-left:14px;margin-right:14px}
+  .mline{grid-template-columns:1fr auto}
+  .mline .d{grid-column:1/-1}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media print{
+  body{background:#fff;font-size:13pt}
+  .brand,.steps,.acts,.foot,footer,.callout,#s-upload,#s-reading,#s-review,.note{display:none!important}
+  .app{max-width:none;padding:0}
+  .sheet{border:0;box-shadow:none}
+  .mhead{background:#eee}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="brand">
+    <b>통장 정리 도우미</b>
+    <button class="linkbtn" id="restart" hidden>처음부터 다시</button>
+  </div>
+
+  <div class="steps" id="steps">
+    <div>1 · 사진 올리기</div>
+    <div>2 · 읽는 중</div>
+    <div>3 · 확인하기</div>
+    <div>4 · 월별 정리</div>
+  </div>
+
+  <!-- 1. 사진 올리기 ──────────────────────────── -->
+  <section id="s-upload" hidden>
+    <div class="sheet">
+      <div class="pad" style="padding-bottom:14px">
+        <h1>통장 사진을 올리면<br>달마다 정리해 드립니다</h1>
+        <p class="lede">입금과 출금을 나눠 월별로 묶어 줍니다. 숫자가 맞는지는 잔액으로 하나하나 검산합니다.</p>
+      </div>
+      <label class="drop" id="drop">
+        <input type="file" id="file" accept="image/*" multiple>
+        <strong>사진 고르기</strong>
+        <small>여기를 누르거나, 사진을 끌어다 놓으세요</small>
+      </label>
+      <div class="shots" id="shots"></div>
+      <div class="foot acts">
+        <button class="btn" id="start" disabled>읽기 시작</button>
+        <button class="btn quiet" id="demo">사진 없이 둘러보기</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 읽는 중 ──────────────────────────────── -->
+  <section id="s-reading" hidden>
+    <div class="sheet">
+      <div class="sheet-head"><h2>사진을 읽고 있습니다</h2><span id="readCount"></span></div>
+      <div class="pad">
+        <ul class="tasks" id="tasks">
+          <li><i class="dot"></i>사진에서 통장 부분 찾기</li>
+          <li><i class="dot"></i>글자 읽기</li>
+          <li><i class="dot"></i>입금과 출금 나누기</li>
+          <li><i class="dot"></i>잔액이 맞는지 계산하기</li>
+        </ul>
+        <div class="print" id="print"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 확인하기 ─────────────────────────────── -->
+  <section id="s-review" hidden>
+    <div class="callout" id="callout">
+      <p id="calloutText"></p>
+      <div class="acts">
+        <button class="btn" id="goFirst">확인할 곳으로 가기</button>
+        <button class="btn quiet" id="undo" hidden>되돌리기</button>
+      </div>
+    </div>
+    <div class="sheet">
+      <div class="sheet-head"><h2>거래 내역</h2><span id="range"></span></div>
+      <div class="cols"><i>번호</i><i>년월일</i><span>사용내역</span><i class="r">금액</i><i class="r">잔액</i></div>
+      <div id="rows"></div>
+    </div>
+    <div class="foot acts" style="padding-top:18px">
+      <button class="btn" id="toMonths">월별로 정리하기</button>
+      <button class="btn quiet" id="backUpload">사진 다시 올리기</button>
+    </div>
+  </section>
+
+  <!-- 4. 월별 정리 ────────────────────────────── -->
+  <section id="s-months" hidden>
+    <div class="acts" style="margin-bottom:16px">
+      <button class="btn" id="printMonths">인쇄하기</button>
+      <button class="btn ghost" id="backReview">거래 내역 다시 보기</button>
+    </div>
+    <div class="sheet">
+      <div class="sheet-head"><h2>월별 정리</h2><span id="mRange"></span></div>
+      <div id="months"></div>
+      <div class="grand" id="grand"></div>
+      <p class="note" id="mNote"></p>
+    </div>
+  </section>
+
+  <footer>사진은 이 기기 밖으로 나가지 않습니다.</footer>
+</div>
+
+<script id="review-data" type="application/json">{"items": [{"index": 0, "date": "20260320", "적요": "40증분기", "사용내역": "부식비", "입금": 849000, "지출": 0, "잔액": 849000, "거래점": "|2519", "상태": "정상", "이전잔액": 0, "기대잔액": 849000}, {"index": 1, "date": "20260530", "적요": "40정", "사용내역": "행복방앗간", "입금": 0, "지출": 71000, "잔액": 778000, "거래점": "451000", "상태": "정상", "이전잔액": 849000, "기대잔액": 778000}, {"index": 2, "date": "20260530", "적요": "40정", "사용내역": "한창건어물", "입금": 0, "지출": 20000, "잔액": 758000, "거래점": "45000", "상태": "정상", "이전잔액": 778000, "기대잔액": 758000}, {"index": 3, "date": "20260530", "적요": "40정", "사용내역": "한창건어물", "입금": 0, "지출": 12000, "잔액": 746000, "거래점": "45000", "상태": "정상", "이전잔액": 758000, "기대잔액": 746000}, {"index": 4, "date": "20260530", "적요": "40정", "사용내역": "농산물직거래장", "입금": 0, "지출": 5000, "잔액": 741000, "거래점": "45000", "상태": "정상", "이전잔액": 746000, "기대잔액": 741000}, {"index": 5, "date": "20260530", "적요": "40정", "사용내역": "푸른들청과", "입금": 0, "지출": 1500, "잔액": 739500, "거래점": "45000", "상태": "정상", "이전잔액": 741000, "기대잔액": 739500}, {"index": 6, "date": "20260530", "적요": "40정", "사용내역": "다모아마트", "입금": 0, "지출": 109200, "잔액": 630300, "거래점": "45000", "상태": "정상", "이전잔액": 739500, "기대잔액": 630300}, {"index": 7, "date": "20260603", "적요": "40정", "사용내역": "쥐식회사 소담", "입금": 0, "지출": 14400, "잔액": 615900, "거래점": "45000", "상태": "정상", "이전잔액": 630300, "기대잔액": 615900}, {"index": 8, "date": "20260603", "적요": "40정", "사용내역": "데온 더 마켓", "입금": 0, "지출": 13960, "잔액": 601940, "거래점": "45000", "상태": "정상", "이전잔액": 615900, "기대잔액": 601940}, {"index": 9, "date": "20260608", "적요": "40정", "사용내역": "농산물직거래장", "입금": 0, "지출": 11000, "잔액": 590940, "거래점": "A5OOO", "상태": "정상", "이전잔액": 601940, "기대잔액": 590940}, {"index": 10, "date": "20260608", "적요": "40정", "사용내역": "새한그릇", "입금": 0, "지출": 14000, "잔액": 564940, "거래점": "A5OOO", "상태": "거래누락", "이전잔액": 590940, "기대잔액": 576940, "제안": {"필드": "앞에 거래 추가", "제안값": 12000, "설명": "이 행 앞에 지출 12,000원짜리 거래가 빠진 것 같습니다."}}, {"index": 11, "date": "20260610", "적요": "40정", "사용내역": "주식회사 소담", "입금": 0, "지출": 7800, "잔액": 557140, "거래점": "IA5000", "상태": "정상", "이전잔액": 564940, "기대잔액": 557140}, {"index": 12, "date": "20260610", "적요": "40정승인", "사용내역": "취소-주식", "입금": 7800, "지출": 0, "잔액": 54940, "거래점": "A5DOO", "상태": "잔액오독", "이전잔액": 557140, "기대잔액": 564940, "제안": {"필드": "잔액", "제안값": 564940, "설명": "잔액을 54,940이 아니라 564,940으로 읽어야 앞뒤가 맞습니다."}}, {"index": 13, "date": "20260610", "적요": "40정", "사용내역": "주식회사 소담", "입금": 0, "지출": 7800, "잔액": 557140, "거래점": "I45000", "상태": "정상", "이전잔액": 564940, "기대잔액": 557140}, {"index": 14, "date": "20260610", "적요": "40정분기", "사용내역": "부식비", "입금": 849000, "지출": 0, "잔액": 1406140, "거래점": "72519", "상태": "정상", "이전잔액": 557140, "기대잔액": 1406140}, {"index": 15, "date": "20260612", "적요": "|40정", "사용내역": "푸른솔리버뷰맨", "입금": 0, "지출": 14000, "잔액": 1392140, "거래점": "03105", "상태": "정상", "이전잔액": 1406140, "기대잔액": 1392140}, {"index": 16, "date": "20260616", "적요": "40정", "사용내역": "다 온 더 마켓", "입금": 0, "지출": 10840, "잔액": 1381300, "거래점": "145000", "상태": "정상", "이전잔액": 1392140, "기대잔액": 1381300}, {"index": 17, "date": "20260620", "적요": "40정", "사용내역": "결산이 자", "입금": 21, "지출": 0, "잔액": 1381321, "거래점": "45000", "상태": "정상", "이전잔액": 1381300, "기대잔액": 1381321}], "summary": {"전체": 18, "정상": 16, "잔액오독": 1, "거래누락": 1, "확인필요": 0}, "계좌": {"은행": "신협", "상품": "보통예탁금", "시작잔액": 0}}</script>
+<script>
+// RAW: 페이지에 직접 써 넣은 데모 데이터. 서버(FastAPI) 없이 파일로 열어도 동작한다.
+// DATA: 지금 화면이 쓰는 검토 결과. 서버가 있으면 서버 응답으로, 없으면 RAW로 채운다.
+const RAW = JSON.parse(document.getElementById('review-data').textContent);
+let DATA = RAW;
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const FLOW = ['upload','reading','review','months'];
+
+let rows = [], history = [], shots = [];
+
+// 서버 API를 시도하고, 서버가 없거나(파일로 연 경우) 실패하면 null을 돌려준다.
+// 호출한 쪽은 null이면 조용히 RAW 데모로 폴백한다 — 화면은 언제나 뜬다.
+async function fetchDemoReview(){
+  try{
+    const res = await fetch('/api/review');
+    if(!res.ok) return null;
+    return await res.json();
+  }catch(_){ return null; }
+}
+async function uploadReview(files){
+  try{
+    const form = new FormData();
+    [...files].forEach(f => form.append('files', f));
+    const res = await fetch('/api/review', {method:'POST', body:form});
+    if(!res.ok) return null;
+    return await res.json();
+  }catch(_){ return null; }
+}
+
+const $ = id => document.getElementById(id);
+const won = n => '₩' + n.toLocaleString('ko-KR');
+const num = n => n.toLocaleString('ko-KR');
+const ymd = d => `${d.slice(0,4)}.${d.slice(4,6)}.${d.slice(6,8)}`;
+const md  = d => `${+d.slice(4,6)}월 ${+d.slice(6,8)}일`;
+const chains = (p,r) => p + r.입금 - r.지출 === r.잔액;
+const 이자행 = r => (r.사용내역||'').includes('결산이');
+
+function classify(list,i,expected,actual){
+  const nxt = list[i+1];
+  if(!nxt) return '확인필요';
+  if(chains(expected,nxt)) return '잔액오독';
+  if(chains(actual,nxt)) return '거래누락';
+  return '확인필요';
+}
+function review(list){
+  let prev = 0;
+  return list.map((r,i) => {
+    const expected = prev + r.입금 - r.지출;
+    const 원 = expected === r.잔액 ? '정상' : classify(list,i,expected,r.잔액);
+    const 상태 = (r.확인됨 && 원 !== '정상') ? '확인함' : 원;
+    prev = (원 === '잔액오독' && !r.확인됨) ? expected : r.잔액;
+    return {...r, index:i, 상태, 기대잔액:expected};
+  });
+}
+const 남은확인 = items => items.filter(x => x.상태!=='정상' && x.상태!=='확인함').length;
+
+/* ── 화면 전환 ────────────────────────────── */
+function show(name){
+  ['upload','reading','review','months'].forEach(s => $('s-'+s).hidden = (s !== name));
+  const at = FLOW.indexOf(name);
+  [...$('steps').children].forEach((el,i) => {
+    el.classList.toggle('on', i === at);
+    el.classList.toggle('past', i < at);
+  });
+  $('restart').hidden = (name === 'upload');
+  window.scrollTo({top:0, behavior: REDUCED ? 'auto' : 'smooth'});
+}
+
+/* ── 1. 사진 고르기 ────────────────────────── */
+const drop = $('drop');
+['dragenter','dragover'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(e => drop.addEventListener(e, () => drop.classList.remove('over')));
+drop.addEventListener('drop', ev => { ev.preventDefault(); addShots(ev.dataTransfer.files); });
+$('file').addEventListener('change', e => addShots(e.target.files));
+
+function addShots(files){
+  [...files].filter(f => f.type.startsWith('image/')).forEach(f => shots.push(f));
+  $('shots').innerHTML = shots.map((f,i) =>
+    `<figure class="shot"><img alt="올린 사진 ${i+1}" src="${URL.createObjectURL(f)}"><p>${i+1}장</p></figure>`).join('');
+  $('start').disabled = shots.length === 0;
+}
+$('start').onclick = async () => {
+  // 읽는 중 화면을 먼저 띄운다 — 실제 OCR은 수십 초~수 분 걸릴 수 있어서,
+  // 그동안 화면이 멈춘 것처럼 보이면 안 된다. 서버 응답을 받은 뒤 결과를 재생한다.
+  enterReading(shots.length);
+  const result = shots.length ? await uploadReview(shots) : null;
+  DATA = result || RAW;   // 서버가 없거나 실패하면 RAW 데모로 폴백
+  playPrinter();
+};
+$('demo').onclick = async () => {
+  // 데모: 서버가 있으면 서버 데모 데이터를, 없으면 페이지에 박힌 RAW를 쓴다.
+  enterReading(1);
+  DATA = (await fetchDemoReview()) || RAW;
+  playPrinter();
+};
+$('backUpload').onclick = () => show('upload');
+$('restart').onclick = () => { shots = []; $('shots').innerHTML = ''; $('start').disabled = true; show('upload'); };
+
+/* ── 2. 읽는 중 (도트 프린터처럼 한 줄씩 찍힌다) ── */
+// 인식을 기다리는 동안 보여줄 화면. 서버 응답이 오기 전에도 바로 뜬다.
+function enterReading(count){
+  show('reading');
+  $('readCount').textContent = `사진 ${count}장`;
+  const printer = $('print'), tasks = [...$('tasks').children];
+  tasks.forEach(t => t.className = '');
+  tasks[0].classList.add('on');
+  printer.innerHTML = '<div class="pending">사진에서 글자를 읽고 있어요… 잠시만 기다려 주세요.</div>';
+}
+// 서버 결과(DATA)를 받은 뒤 한 줄씩 찍어 보여주고 검토 화면으로 넘어간다.
+function playPrinter(){
+  const printer = $('print'), tasks = [...$('tasks').children];
+  printer.innerHTML = ''; tasks.forEach(t => t.className = '');
+
+  const lines = DATA.items.map(x =>
+    `${String(x.index+1).padStart(2)}  ${x.date}  ${(x.사용내역||'').padEnd(12)}  ` +
+    `${x.지출?'-':'+'}${num(x.지출||x.입금).padStart(9)}  ${num(x.잔액).padStart(10)}`);
+
+  if(REDUCED){
+    printer.innerHTML = lines.map(l => `<div>${l}</div>`).join('');
+    tasks.forEach(t => t.classList.add('done'));
+    return finishReading();
+  }
+  let i = 0;
+  tasks[0].classList.add('on');
+  const timer = setInterval(() => {
+    if(i < lines.length){
+      const d = document.createElement('div');
+      d.textContent = lines[i];
+      printer.appendChild(d);
+      printer.scrollTop = printer.scrollHeight;
+      const stage = Math.min(3, Math.floor(i / (lines.length/3.2)));
+      tasks.forEach((t,k) => { t.classList.toggle('on', k===stage); t.classList.toggle('done', k<stage); });
+      i++;
+    } else {
+      clearInterval(timer);
+      tasks.forEach(t => { t.classList.remove('on'); t.classList.add('done'); });
+      setTimeout(finishReading, 450);
+    }
+  }, 90);
+}
+function finishReading(){
+  rows = DATA.items.map(i => ({date:i.date, 적요:i.적요, 사용내역:i.사용내역, 입금:i.입금,
+    지출:i.지출, 잔액:i.잔액, 거래점:i.거래점, 확인됨:false}));
+  history = [];
+  render();
+  show('review');
+}
+
+/* ── 3. 확인하기 ──────────────────────────── */
+function 고치기(fn){ history.push(JSON.parse(JSON.stringify(rows))); fn(); render(); }
+const 잔액고치기 = (i,v) => 고치기(() => { rows[i].잔액 = v; });
+const 그대로두기 = i => 고치기(() => { rows[i].확인됨 = true; });
+function 거래넣기(i,차이){
+  고치기(() => {
+    const 이전 = i === 0 ? 0 : rows[i-1].잔액;
+    const 지출 = 차이 > 0, 금액 = Math.abs(차이);
+    rows.splice(i,0,{date:rows[i].date, 적요:rows[i].적요, 사용내역:'', 입금:지출?0:금액,
+      지출:지출?금액:0, 잔액:지출?이전-금액:이전+금액, 거래점:'', 확인됨:false, 새로추가:true});
+  });
+}
+
+function render(){
+  const items = review(rows), todo = 남은확인(items);
+
+  $('callout').classList.toggle('done', todo === 0);
+  $('calloutText').textContent = todo
+    ? `${items.length}건을 읽었습니다. ${todo}군데만 통장과 맞는지 봐 주세요.`
+    : `${items.length}건 모두 확인했습니다.`;
+  $('goFirst').hidden = todo === 0;
+  $('undo').hidden = history.length === 0;
+
+  const ds = items.map(x => x.date).sort();
+  $('range').textContent = ds.length ? `${ymd(ds[0])} — ${ymd(ds[ds.length-1])}` : '';
+
+  const box = $('rows');
+  box.innerHTML = '';
+  items.forEach(x => {
+    const 문제 = x.상태!=='정상' && x.상태!=='확인함';
+    const row = document.createElement('div');
+    row.className = 'row' + (문제?' flag':'') + (x.상태==='확인함'?' fixed':'');
+    row.innerHTML = `<div class="rowline">
+      <i class="num">${x.index+1}</i>
+      <i class="date">${ymd(x.date)}</i>
+      <span class="memo" data-amt="${x.지출?'지출':'입금'} ${won(x.지출||x.입금)}">${x.사용내역 || '내역 없음'}</span>
+      <i class="amt ${x.지출?'out':'in'}">${x.지출?'−':'+'}${won(x.지출||x.입금)}</i>
+      <i class="bal">${won(x.잔액)}</i></div>`;
+
+    if(x.새로추가){
+      const w = document.createElement('div');
+      w.className = 'fix';
+      w.innerHTML = `<div class="manual"><div><label for="m${x.index}">이 거래의 가게 이름을 적어 주세요</label>
+        <input type="text" id="m${x.index}" value="${x.사용내역}" placeholder="예: 한창건어물"></div></div>`;
+      w.querySelector('input').addEventListener('input', e => { rows[x.index].사용내역 = e.target.value; });
+      row.appendChild(w);
+    }
+
+    if(문제){
+      const 차이 = x.기대잔액 - x.잔액;
+      const w = document.createElement('div');
+      w.className = 'fix';
+      if(x.상태==='잔액오독'){
+        w.innerHTML = `<p>통장에 찍힌 잔액이 <b>${won(x.기대잔액)}</b>인데 <b>${won(x.잔액)}</b>으로 읽혔습니다.</p>
+          <div class="acts"><button class="btn" data-a="fix">${won(x.기대잔액)}으로 고치기</button>
+          <button class="btn ghost" data-a="keep">통장이 맞습니다</button></div>
+          <div class="manual"><div><label for="b${x.index}">직접 입력</label>
+          <input type="text" class="figure" id="b${x.index}" inputmode="numeric" placeholder="${x.기대잔액}"></div>
+          <button class="btn ghost" data-a="man">이 값으로</button></div>
+          <p class="why">앞 잔액 ${won(x.기대잔액 - x.입금 + x.지출)} ${x.지출?'−':'+'} ${won(x.지출||x.입금)} = ${won(x.기대잔액)}</p>`;
+        w.querySelector('[data-a=fix]').onclick = () => 잔액고치기(x.index, x.기대잔액);
+        w.querySelector('[data-a=man]').onclick = () => {
+          const v = parseInt(w.querySelector('input').value.replace(/[^\d]/g,''),10);
+          if(!isNaN(v)) 잔액고치기(x.index, v);
+        };
+      } else if(x.상태==='거래누락'){
+        w.innerHTML = `<p>이 줄 앞에 <b>${차이>0?'지출':'입금'} ${won(Math.abs(차이))}</b>짜리 거래가 빠진 것 같습니다. 통장을 보고 확인해 주세요.</p>
+          <div class="acts"><button class="btn" data-a="add">빠진 거래 넣기</button>
+          <button class="btn ghost" data-a="keep">통장이 맞습니다</button></div>
+          <p class="why">여기까지 계산하면 ${won(x.기대잔액)}인데 통장에는 ${won(x.잔액)}으로 찍혀 있습니다</p>`;
+        w.querySelector('[data-a=add]').onclick = () => 거래넣기(x.index, 차이);
+      } else {
+        w.innerHTML = `<p>앞뒤 잔액이 모두 맞지 않습니다. 통장 사진을 직접 보고 확인해 주세요.</p>
+          <div class="acts"><button class="btn ghost" data-a="keep">확인했습니다</button></div>`;
+      }
+      w.querySelector('[data-a=keep]').onclick = () => 그대로두기(x.index);
+      row.appendChild(w);
+    }
+    box.appendChild(row);
+  });
+}
+
+$('goFirst').onclick = () => {
+  const el = document.querySelector('.row.flag');
+  if(el) el.scrollIntoView({behavior: REDUCED?'auto':'smooth', block:'center'});
+};
+$('undo').onclick = () => { if(history.length){ rows = history.pop(); render(); } };
+$('toMonths').onclick = () => { renderMonths(); show('months'); };
+$('backReview').onclick = () => show('review');
+$('printMonths').onclick = () => window.print();
+
+/* ── 4. 월별 정리 ─────────────────────────── */
+function renderMonths(){
+  const items = review(rows);
+  const 월 = {};
+  items.forEach(x => {
+    const m = x.date.slice(0,6);
+    월[m] = 월[m] || {입금:0, 지출:0, 이자:0, 끝잔액:0, 목록:[]};
+    const b = 월[m];
+    if(이자행(x)) b.이자 += x.입금 || x.지출;
+    else if(x.입금) b.입금 += x.입금;
+    else b.지출 += x.지출;
+    b.끝잔액 = x.잔액;
+    b.목록.push(x);
+  });
+
+  const keys = Object.keys(월).sort();
+  $('months').innerHTML = keys.map(k => {
+    const b = 월[k];
+    const 줄 = b.목록.map(x => `<div class="mline">
+        <span class="d">${md(x.date)}</span>
+        <span>${x.사용내역 || '내역 없음'}</span>
+        <span class="a ${x.입금?'in':''}">${x.입금?'+':'−'}${num(x.입금||x.지출)}</span>
+      </div>`).join('');
+    return `<div class="month">
+      <div class="mhead">
+        <h3>${+k.slice(4,6)}월</h3>
+        <dl>
+          <div><dt>들어온 돈</dt><dd class="in">${won(b.입금 + b.이자)}</dd></div>
+          <div><dt>나간 돈</dt><dd>${won(b.지출)}</dd></div>
+          <div><dt>월말 잔액</dt><dd>${won(b.끝잔액)}</dd></div>
+        </dl>
+      </div>${줄}</div>`;
+  }).join('');
+
+  const 총입금 = keys.reduce((s,k) => s + 월[k].입금 + 월[k].이자, 0);
+  const 총지출 = keys.reduce((s,k) => s + 월[k].지출, 0);
+  const 끝 = items.length ? items[items.length-1].잔액 : 0;
+  $('grand').innerHTML =
+    `<span>전체 합계</span><span>들어온 돈 ${won(총입금)} · 나간 돈 ${won(총지출)} · 남은 돈 ${won(끝)}</span>`;
+
+  const ds = items.map(x => x.date).sort();
+  $('mRange').textContent = ds.length ? `${ymd(ds[0])} — ${ymd(ds[ds.length-1])}` : '';
+
+  const todo = 남은확인(items);
+  $('mNote').textContent = todo
+    ? `아직 확인하지 않은 곳이 ${todo}군데 있습니다. 숫자가 달라질 수 있으니 확인해 주세요.`
+    : '이 숫자를 그대로 서류에 옮겨 적으시면 됩니다.';
+}
+
+show('upload');
+</script>
+</body>
+</html>
