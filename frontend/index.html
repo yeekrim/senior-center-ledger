@@ -111,21 +111,36 @@ input.figure{font-family:var(--mono);max-width:230px}
 .callout p{margin:0;font-size:20px;font-weight:700}
 .callout.done p{color:var(--stamp)}
 
-/* ── 월별 정리 ─────────────────────────────── */
-.month{border-bottom:1px solid var(--rule)}
-.month:last-child{border-bottom:0}
-.mhead{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:baseline;padding:18px 22px 14px;background:var(--band)}
-.mhead h3{margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;min-width:96px}
-.mhead dl{display:flex;flex-wrap:wrap;gap:6px 22px;margin:0;font-size:18px}
-.mhead dt{display:inline;color:var(--ink-soft);margin-right:6px}
-.mhead dd{display:inline;margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:800}
-.mhead dd.in{color:var(--stamp)}
-.mline{display:grid;grid-template-columns:112px 1fr 132px;gap:12px;align-items:center;padding:11px 22px;border-top:1px solid rgba(140,154,124,.35);font-size:18px}
-.mline .d{font-family:var(--mono);font-size:16px;color:var(--ink-soft)}
-.mline .a{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700}
-.mline .a.in{color:var(--stamp)}
-.grand{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding:20px 22px;border-top:2px solid var(--ink);font-size:20px;font-weight:800}
-.grand span:last-child{font-family:var(--mono);font-variant-numeric:tabular-nums}
+/* ── 통장 · 기간 고르기 ─────────────────────── */
+.pick{border:0;margin:0;padding:0 22px 18px}
+.pick legend{font-size:19px;font-weight:800;padding:0;margin-bottom:10px}
+.choices{display:flex;flex-wrap:wrap;gap:10px}
+.choices label{position:relative;cursor:pointer}
+.choices input[type=radio]{position:absolute;opacity:0;width:1px;height:1px}
+.choices span{display:flex;align-items:center;min-height:60px;padding:12px 22px;font-size:19px;font-weight:700;border:2px solid var(--rule);background:#fff}
+.choices input:checked+span{border-color:var(--stamp);background:var(--stamp);color:#fff}
+.choices input:focus-visible+span{outline:4px solid var(--seal);outline-offset:3px}
+.choices label.year{display:flex;align-items:center;gap:8px}
+.choices label.year input{width:110px;text-align:center}
+.choices label.year span{border:0;background:none;padding:0;min-height:0}
+.tip{margin:0 22px 22px;font-size:17px;color:var(--ink-soft);max-width:52ch}
+
+/* ── 정산하기 ─────────────────────────────── */
+.pend{display:flex;flex-wrap:wrap;gap:12px 22px;align-items:center;justify-content:space-between;padding:16px 22px;border-top:1px solid rgba(140,154,124,.4)}
+.pend.todo{border-left:10px solid var(--seal)}
+.pend .what{font-size:19px}
+.pend .what i{font-family:var(--mono);font-style:normal;font-size:16px;color:var(--ink-soft);margin-right:10px}
+.pend .what b{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--stamp);margin-left:10px}
+.pend .btn{min-height:54px;padding:12px 18px;font-size:18px}
+.pend .btn[aria-pressed=false]{background:transparent;color:var(--stamp)}
+table.form{width:100%;border-collapse:collapse;font-size:19px}
+table.form th,table.form td{border:1px solid var(--rule);padding:12px 14px}
+table.form th{background:var(--band);font-size:16px;font-weight:800;text-align:center}
+table.form th small{display:block;font-size:13px;font-weight:600;color:var(--ink-soft)}
+table.form td{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700}
+table.form td:first-child{text-align:center;font-family:var(--sans)}
+table.form tr.total td{background:var(--paper);border-top:2px solid var(--ink)}
+table.form td.none{background:repeating-linear-gradient(135deg,transparent 0 10px,var(--rule) 10px 11px)}
 .note{margin:0;padding:18px 22px 26px;color:var(--ink-soft);font-size:17px}
 footer{padding:26px 4px;font-family:var(--mono);font-size:13px;color:var(--ink-soft)}
 
@@ -137,18 +152,18 @@ footer{padding:26px 4px;font-family:var(--mono);font-size:13px;color:var(--ink-s
   .amt{display:none}
   .memo::after{content:attr(data-amt);display:block;font-family:var(--mono);font-size:17px;color:var(--ink-soft)}
   .steps div{font-size:13px;padding:9px 4px}
-  .pad,.fix,.foot,.note,.mhead,.mline,.grand{padding-left:14px;padding-right:14px}
-  label.drop{margin-left:14px;margin-right:14px}
-  .mline{grid-template-columns:1fr auto}
-  .mline .d{grid-column:1/-1}
+  .pad,.fix,.foot,.note,.pick,.pend{padding-left:14px;padding-right:14px}
+  label.drop,.tip{margin-left:14px;margin-right:14px}
+  table.form{font-size:16px}
+  table.form th,table.form td{padding:9px 6px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media print{
   body{background:#fff;font-size:13pt}
-  .brand,.steps,.acts,.foot,footer,.callout,#s-upload,#s-reading,#s-review,.note{display:none!important}
+  .brand,.steps,.acts,.foot,footer,.callout,#s-upload,#s-reading,#s-review,#pendingSheet{display:none!important}
   .app{max-width:none;padding:0}
   .sheet{border:0;box-shadow:none}
-  .mhead{background:#eee}
+  table.form th{background:#eee}
 }
 </style>
 </head>
@@ -164,21 +179,38 @@ footer{padding:26px 4px;font-family:var(--mono);font-size:13px;color:var(--ink-s
     <div>1 · 사진 올리기</div>
     <div>2 · 읽는 중</div>
     <div>3 · 확인하기</div>
-    <div>4 · 월별 정리</div>
+    <div>4 · 정산하기</div>
   </div>
 
   <!-- 1. 사진 올리기 ──────────────────────────── -->
   <section id="s-upload" hidden>
     <div class="sheet">
       <div class="pad" style="padding-bottom:14px">
-        <h1>통장 사진을 올리면<br>달마다 정리해 드립니다</h1>
-        <p class="lede">입금과 출금을 나눠 월별로 묶어 줍니다. 숫자가 맞는지는 잔액으로 하나하나 검산합니다.</p>
+        <h1>통장 사진을 올리면<br>정산보고서에 적을 숫자를 알려 드립니다</h1>
+        <p class="lede">숫자가 맞는지는 잔액으로 하나하나 검산합니다. 보고서는 알려 드린 숫자를 보고 직접 써 주세요.</p>
       </div>
+      <fieldset class="pick">
+        <legend>어느 통장인가요?</legend>
+        <div class="choices" id="accounts">
+          <label><input type="radio" name="account" value="운영비"><span>운영비</span></label>
+          <label><input type="radio" name="account" value="부식비"><span>부식비</span></label>
+          <label><input type="radio" name="account" value="냉난방비"><span>냉난방비 · 양곡비</span></label>
+        </div>
+      </fieldset>
+      <fieldset class="pick">
+        <legend>어느 기간을 정산하나요?</legend>
+        <div class="choices">
+          <label class="year"><input type="text" class="figure" id="year" inputmode="numeric" maxlength="4" aria-label="연도"><span>년</span></label>
+          <label><input type="radio" name="half" value="상반기" checked><span>상반기 (1~6월)</span></label>
+          <label><input type="radio" name="half" value="하반기"><span>하반기 (7~12월)</span></label>
+        </div>
+      </fieldset>
       <label class="drop" id="drop">
         <input type="file" id="file" accept="image/*" multiple>
         <strong>사진 고르기</strong>
         <small>여기를 누르거나, 사진을 끌어다 놓으세요</small>
       </label>
+      <p class="tip">손이 흔들리면 숫자를 잘못 읽습니다. 통장을 바닥에 펴 놓고, 한 장에 반쪽씩 가까이 찍어도 됩니다. 겹쳐 찍어도 알아서 이어 붙입니다.</p>
       <div class="shots" id="shots"></div>
       <div class="foot acts">
         <button class="btn" id="start" disabled>읽기 시작</button>
@@ -218,22 +250,43 @@ footer{padding:26px 4px;font-family:var(--mono);font-size:13px;color:var(--ink-s
       <div id="rows"></div>
     </div>
     <div class="foot acts" style="padding-top:18px">
-      <button class="btn" id="toMonths">월별로 정리하기</button>
+      <button class="btn" id="toMonths">정산하기</button>
       <button class="btn quiet" id="backUpload">사진 다시 올리기</button>
     </div>
   </section>
 
-  <!-- 4. 월별 정리 ────────────────────────────── -->
+  <!-- 4. 정산하기 ──────────────────────────────── -->
   <section id="s-months" hidden>
-    <div class="acts" style="margin-bottom:16px">
-      <button class="btn" id="printMonths">인쇄하기</button>
-      <button class="btn ghost" id="backReview">거래 내역 다시 보기</button>
+    <div class="callout" id="sCallout">
+      <p id="sCalloutText"></p>
+      <div class="acts">
+        <button class="btn" id="printMonths">인쇄하기</button>
+        <button class="btn ghost" id="backReview">거래 내역 다시 보기</button>
+      </div>
     </div>
-    <div class="sheet">
-      <div class="sheet-head"><h2>월별 정리</h2><span id="mRange"></span></div>
-      <div id="months"></div>
-      <div class="grand" id="grand"></div>
-      <p class="note" id="mNote"></p>
+
+    <div class="sheet" id="pendingSheet">
+      <div class="sheet-head"><h2>정해 주실 입금</h2><span id="pCount"></span></div>
+      <p class="note" style="padding-bottom:6px">보조금도 이자도 아닌 입금입니다. 캐쉬백처럼 새로 생긴 돈이면 <b>수입</b>, 취소나 반환처럼 나갔던 돈이 돌아온 것이면 <b>집행액에서 빼기</b>를 골라 주세요.</p>
+      <div id="pending"></div>
+    </div>
+
+    <div id="report">
+      <div class="sheet">
+        <div class="sheet-head"><h2 id="mTitle">보조금 월별 집행내역</h2><span>단위: 원</span></div>
+        <table class="form">
+          <thead><tr><th>구분</th><th>수입액<small>(보조금, 이자 등)</small></th><th>집행액</th><th>잔액</th></tr></thead>
+          <tbody id="months"></tbody>
+        </table>
+      </div>
+      <div class="sheet">
+        <div class="sheet-head"><h2>보조금 집행내역 (총괄)</h2><span>단위: 원</span></div>
+        <table class="form">
+          <thead><tr><th>구분</th><th>예산액<small>(보조금)</small></th><th>집행액</th><th>집행잔액</th><th>이자</th></tr></thead>
+          <tbody id="summary"></tbody>
+        </table>
+        <p class="note" id="mNote"></p>
+      </div>
     </div>
   </section>
 
@@ -250,6 +303,9 @@ const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const FLOW = ['upload','reading','review','months'];
 
 let rows = [], history = [], shots = [];
+// OPENING: 첫 거래 직전 잔액(서버가 사진에서 구한다). 결정: 미정 입금 인덱스 -> '수입' | '차감'
+let OPENING = 0, 결정 = {};
+const 통장이름 = {운영비:'운영비 (난방비 포함)', 부식비:'부식비', 냉난방비:'냉난방비 · 양곡비 (국비)'};
 
 // 서버 API를 시도하고, 서버가 없거나(파일로 연 경우) 실패하면 null을 돌려준다.
 // 호출한 쪽은 null이면 조용히 RAW 데모로 폴백한다 — 화면은 언제나 뜬다.
@@ -270,13 +326,21 @@ async function uploadReview(files){
   }catch(_){ return null; }
 }
 
+async function postSettlement(body){
+  try{
+    const res = await fetch('/api/settlement', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+    if(!res.ok) return null;
+    return await res.json();
+  }catch(_){ return null; }
+}
+
 const $ = id => document.getElementById(id);
 const won = n => '₩' + n.toLocaleString('ko-KR');
 const num = n => n.toLocaleString('ko-KR');
 const ymd = d => `${d.slice(0,4)}.${d.slice(4,6)}.${d.slice(6,8)}`;
 const md  = d => `${+d.slice(4,6)}월 ${+d.slice(6,8)}일`;
 const chains = (p,r) => p + r.입금 - r.지출 === r.잔액;
-const 이자행 = r => (r.사용내역||'').includes('결산이');
 
 function classify(list,i,expected,actual){
   const nxt = list[i+1];
@@ -286,7 +350,7 @@ function classify(list,i,expected,actual){
   return '확인필요';
 }
 function review(list){
-  let prev = 0;
+  let prev = OPENING;
   return list.map((r,i) => {
     const expected = prev + r.입금 - r.지출;
     const 원 = expected === r.잔액 ? '정상' : classify(list,i,expected,r.잔액);
@@ -315,12 +379,16 @@ const drop = $('drop');
 ['dragleave','drop'].forEach(e => drop.addEventListener(e, () => drop.classList.remove('over')));
 drop.addEventListener('drop', ev => { ev.preventDefault(); addShots(ev.dataTransfer.files); });
 $('file').addEventListener('change', e => addShots(e.target.files));
+$('year').value = new Date().getFullYear();
+const picked = name => (document.querySelector(`input[name=${name}]:checked`) || {}).value;
+const 준비됨 = () => shots.length > 0 && !!picked('account');
+document.querySelectorAll('input[name=account]').forEach(r => r.addEventListener('change', () => { $('start').disabled = !준비됨(); }));
 
 function addShots(files){
   [...files].filter(f => f.type.startsWith('image/')).forEach(f => shots.push(f));
   $('shots').innerHTML = shots.map((f,i) =>
     `<figure class="shot"><img alt="올린 사진 ${i+1}" src="${URL.createObjectURL(f)}"><p>${i+1}장</p></figure>`).join('');
-  $('start').disabled = shots.length === 0;
+  $('start').disabled = !준비됨();
 }
 $('start').onclick = async () => {
   // 읽는 중 화면을 먼저 띄운다 — 실제 OCR은 수십 초~수 분 걸릴 수 있어서,
@@ -332,12 +400,13 @@ $('start').onclick = async () => {
 };
 $('demo').onclick = async () => {
   // 데모: 서버가 있으면 서버 데모 데이터를, 없으면 페이지에 박힌 RAW를 쓴다.
+  if(!picked('account')) document.querySelector('input[name=account][value=부식비]').checked = true;
   enterReading(1);
   DATA = (await fetchDemoReview()) || RAW;
   playPrinter();
 };
 $('backUpload').onclick = () => show('upload');
-$('restart').onclick = () => { shots = []; $('shots').innerHTML = ''; $('start').disabled = true; show('upload'); };
+$('restart').onclick = () => { shots = []; $('shots').innerHTML = ''; $('start').disabled = !준비됨(); show('upload'); };
 
 /* ── 2. 읽는 중 (도트 프린터처럼 한 줄씩 찍힌다) ── */
 // 인식을 기다리는 동안 보여줄 화면. 서버 응답이 오기 전에도 바로 뜬다.
@@ -384,18 +453,20 @@ function playPrinter(){
 function finishReading(){
   rows = DATA.items.map(i => ({date:i.date, 적요:i.적요, 사용내역:i.사용내역, 입금:i.입금,
     지출:i.지출, 잔액:i.잔액, 거래점:i.거래점, 확인됨:false}));
-  history = [];
+  OPENING = DATA.시작잔액 ?? 0;
+  history = []; 결정 = {};
   render();
   show('review');
 }
 
 /* ── 3. 확인하기 ──────────────────────────── */
-function 고치기(fn){ history.push(JSON.parse(JSON.stringify(rows))); fn(); render(); }
+// 행을 고치면 인덱스가 바뀔 수 있어(거래 넣기) 미정 입금 결정은 다시 받는다.
+function 고치기(fn){ history.push(JSON.parse(JSON.stringify(rows))); fn(); 결정 = {}; render(); }
 const 잔액고치기 = (i,v) => 고치기(() => { rows[i].잔액 = v; });
 const 그대로두기 = i => 고치기(() => { rows[i].확인됨 = true; });
 function 거래넣기(i,차이){
   고치기(() => {
-    const 이전 = i === 0 ? 0 : rows[i-1].잔액;
+    const 이전 = i === 0 ? OPENING : rows[i-1].잔액;
     const 지출 = 차이 > 0, 금액 = Math.abs(차이);
     rows.splice(i,0,{date:rows[i].date, 적요:rows[i].적요, 사용내역:'', 입금:지출?0:금액,
       지출:지출?금액:0, 잔액:지출?이전-금액:이전+금액, 거래점:'', 확인됨:false, 새로추가:true});
@@ -475,58 +546,72 @@ $('goFirst').onclick = () => {
   const el = document.querySelector('.row.flag');
   if(el) el.scrollIntoView({behavior: REDUCED?'auto':'smooth', block:'center'});
 };
-$('undo').onclick = () => { if(history.length){ rows = history.pop(); render(); } };
-$('toMonths').onclick = () => { renderMonths(); show('months'); };
+$('undo').onclick = () => { if(history.length){ rows = history.pop(); 결정 = {}; render(); } };
+$('toMonths').onclick = () => { show('months'); renderSettlement(); };
 $('backReview').onclick = () => show('review');
 $('printMonths').onclick = () => window.print();
 
-/* ── 4. 월별 정리 ─────────────────────────── */
-function renderMonths(){
-  const items = review(rows);
-  const 월 = {};
-  items.forEach(x => {
-    const m = x.date.slice(0,6);
-    월[m] = 월[m] || {입금:0, 지출:0, 이자:0, 끝잔액:0, 목록:[]};
-    const b = 월[m];
-    if(이자행(x)) b.이자 += x.입금 || x.지출;
-    else if(x.입금) b.입금 += x.입금;
-    else b.지출 += x.지출;
-    b.끝잔액 = x.잔액;
-    b.목록.push(x);
+/* ── 4. 정산하기 ─────────────────────────── */
+// 계산은 서버(passbook/settlement.py) 한 곳에서만 한다. 결정을 바꿀 때마다 다시 묻는다.
+async function renderSettlement(){
+  const items = review(rows), todo = 남은확인(items);
+  const account = picked('account'), half = picked('half');
+  const year = parseInt($('year').value, 10);
+  $('mTitle').textContent = `${통장이름[account]} · ${year}년 ${half} 월별 집행내역`;
+
+  const r = await postSettlement({통장:account, 연도:year, 반기:half, 시작잔액:OPENING, 결정,
+    items: items.map(x => ({date:x.date, 적요:x.적요||'', 사용내역:x.사용내역||'',
+                            입금:x.입금, 지출:x.지출, 잔액:x.잔액}))});
+  if(!r){
+    $('sCallout').classList.remove('done');
+    $('sCalloutText').textContent = '정산은 서버가 켜져 있을 때만 할 수 있습니다.';
+    $('pendingSheet').hidden = true; $('report').hidden = true; $('printMonths').disabled = true;
+    return;
+  }
+
+  // 미정 입금
+  const 남은결정 = r.미정.filter(p => !p.결정).length;
+  $('pendingSheet').hidden = r.미정.length === 0;
+  $('pCount').textContent = `${r.미정.length}건`;
+  const box = $('pending');
+  box.innerHTML = '';
+  r.미정.forEach(p => {
+    const el = document.createElement('div');
+    el.className = 'pend' + (p.결정 ? '' : ' todo');
+    el.innerHTML = `<span class="what"><i>${md(p.date)}</i>${p.사용내역 || '내역 없음'}<b>+${won(p.금액)}</b></span>
+      <span class="acts">
+        <button class="btn" data-v="수입" aria-pressed="${p.결정==='수입'}">수입</button>
+        <button class="btn" data-v="차감" aria-pressed="${p.결정==='차감'}">집행액에서 빼기</button>
+      </span>`;
+    el.querySelectorAll('button').forEach(b => b.onclick = () => { 결정[p.index] = b.dataset.v; renderSettlement(); });
+    box.appendChild(el);
   });
 
-  const keys = Object.keys(월).sort();
-  $('months').innerHTML = keys.map(k => {
-    const b = 월[k];
-    const 줄 = b.목록.map(x => `<div class="mline">
-        <span class="d">${md(x.date)}</span>
-        <span>${x.사용내역 || '내역 없음'}</span>
-        <span class="a ${x.입금?'in':''}">${x.입금?'+':'−'}${num(x.입금||x.지출)}</span>
-      </div>`).join('');
-    return `<div class="month">
-      <div class="mhead">
-        <h3>${+k.slice(4,6)}월</h3>
-        <dl>
-          <div><dt>들어온 돈</dt><dd class="in">${won(b.입금 + b.이자)}</dd></div>
-          <div><dt>나간 돈</dt><dd>${won(b.지출)}</dd></div>
-          <div><dt>월말 잔액</dt><dd>${won(b.끝잔액)}</dd></div>
-        </dl>
-      </div>${줄}</div>`;
-  }).join('');
+  // 남은 일 안내. 완료되기 전에는 숫자를 보여주지 않는다 — 틀린 숫자를 옮겨 적지 않도록.
+  const 할일 = [];
+  if(todo) 할일.push(`거래 내역에서 확인할 곳 ${todo}군데`);
+  if(남은결정) 할일.push(`정해 주실 입금 ${남은결정}건`);
+  if(!todo && !r.검산.잔액연쇄) 할일.push('잔액이 이어지지 않는 곳 (거래 내역을 다시 봐 주세요)');
+  $('sCallout').classList.toggle('done', r.완료);
+  $('sCalloutText').textContent = r.완료
+    ? '통장 잔액과 맞습니다. 아래 숫자를 보고서에 옮겨 적어 주세요.'
+    : `아직 남은 것: ${할일.join(', ') || '확인할 곳'}`;
+  $('report').hidden = !r.완료;
+  $('printMonths').disabled = !r.완료;
+  if(!r.완료) return;
 
-  const 총입금 = keys.reduce((s,k) => s + 월[k].입금 + 월[k].이자, 0);
-  const 총지출 = keys.reduce((s,k) => s + 월[k].지출, 0);
-  const 끝 = items.length ? items[items.length-1].잔액 : 0;
-  $('grand').innerHTML =
-    `<span>전체 합계</span><span>들어온 돈 ${won(총입금)} · 나간 돈 ${won(총지출)} · 남은 돈 ${won(끝)}</span>`;
+  $('months').innerHTML = r.월별.map(m =>
+    `<tr><td>${m.월}월</td><td>${num(m.수입액)}</td><td>${num(m.집행액)}</td><td>${num(m.잔액)}</td></tr>`).join('') +
+    `<tr class="total"><td>합계</td><td>${num(r.합계.수입액)}</td><td>${num(r.합계.집행액)}</td><td class="none"></td></tr>`;
+  const t = r.총괄;
+  $('summary').innerHTML =
+    `<tr><td>${통장이름[account]}</td><td>${num(t.예산액)}</td><td>${num(t.집행액)}</td><td>${num(t.집행잔액)}</td><td>${num(t.이자)}</td></tr>`;
 
-  const ds = items.map(x => x.date).sort();
-  $('mRange').textContent = ds.length ? `${ymd(ds[0])} — ${ymd(ds[ds.length-1])}` : '';
-
-  const todo = 남은확인(items);
-  $('mNote').textContent = todo
-    ? `아직 확인하지 않은 곳이 ${todo}군데 있습니다. 숫자가 달라질 수 있으니 확인해 주세요.`
-    : '이 숫자를 그대로 서류에 옮겨 적으시면 됩니다.';
+  const c = r.검산, 메모 = [];
+  메모.push(`검산: 시작 잔액 ${won(c.시작잔액)} + 수입 ${won(r.합계.수입액)} − 집행 ${won(r.합계.집행액)} = 통장 잔액 ${won(c.통장잔액)}`);
+  if(t.기타수입) 메모.push(`보조금·이자가 아닌 수입 ${won(t.기타수입)}은 총괄표에 칸이 없습니다. 비고 칸 등에 따로 적어 주세요.`);
+  메모.push('총괄표의 합계 줄은 세 통장을 모두 정산한 뒤 더해서 적어 주세요.');
+  $('mNote').innerHTML = 메모.map(x => `<span style="display:block">${x}</span>`).join('');
 }
 
 show('upload');
