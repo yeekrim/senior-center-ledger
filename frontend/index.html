@@ -43,6 +43,8 @@ b{font-weight:800}
 /* ── 카드 ─────────────────────────────────── */
 .sheet{background:var(--card);border-radius:var(--r);box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .sheet+.sheet{margin-top:16px}
+/* 정산 화면: '정해 주실 입금' 카드와 보고서 표 카드 사이 (서로 다른 부모라 위 규칙이 안 걸린다) */
+#pendingSheet:not([hidden])+#report{margin-top:16px}
 .sheet-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:24px 24px 12px}
 .sheet-head h2{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:0}
 .sheet-head span{font-size:18px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
@@ -216,7 +218,6 @@ footer{padding:28px 4px;font-size:18px;color:var(--ink-soft)}
     <div class="sheet">
       <div class="pad" style="padding-bottom:14px">
         <h1>통장 사진을 올리면<br>정산보고서에 적을 숫자를 알려 드립니다</h1>
-        <p class="lede">숫자가 맞는지는 잔액으로 하나하나 검산합니다. 보고서는 알려 드린 숫자를 보고 직접 써 주세요.</p>
       </div>
       <fieldset class="pick">
         <legend>어느 통장인가요?</legend>
@@ -355,6 +356,9 @@ async function uploadReview(files){
     [...files].forEach(f => form.append('files', f));
     res = await fetch('/api/review', {method:'POST', body:form});
   }catch(_){
+    // 파일(index.html)을 직접 열면 '/api/review'가 file:// 경로가 되어 서버에 닿지 않는다.
+    if(location.protocol === 'file:')
+      return {error:'이 화면은 파일로 열면 사진을 읽을 수 없어요. 주소창에 http://127.0.0.1:8000 을 넣어 열어 주세요.'};
     return {error:'사진을 읽는 프로그램(서버)에 연결하지 못했습니다. 프로그램이 켜져 있는지 확인해 주세요.'};
   }
   if(!res.ok){

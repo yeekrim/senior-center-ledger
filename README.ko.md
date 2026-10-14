@@ -4,9 +4,8 @@
 
 경로당 통장 사진을 찍으면, 잔액이 맞는지 한 줄씩 검산한 뒤 **구청에 내는 보조금 정산보고서에 옮겨 적을 숫자**를 알려 주는 웹 앱입니다. 보고서는 어르신이 직접 쓰고, 이 앱은 칸에 들어갈 숫자만 맞게 만들어 드립니다.
 
-<p>
-  <img src="docs/screenshots/settlement.png" alt="정산하기 화면: 월별 집행내역과 총괄 표" width="520">
-  <img src="docs/screenshots/settlement-mobile.png" alt="휴대폰 화면의 정산 결과" width="200">
+<p align="center">
+  <img src="docs/screenshots/settlement.png" alt="정산하기 화면: 월별 집행내역과 총괄 표" width="600">
 </p>
 
 ## 왜 만들었나
@@ -22,9 +21,9 @@
 3. **확인하기**: `앞 잔액 + 입금 − 출금 = 잔액`이 깨지는 줄을 찾아, 원인과 고칠 값을 제안합니다.
 4. **정산하기**: 보고서의 두 표(월별 집행내역, 총괄)에 들어갈 숫자를 보여줍니다. 검산이 맞기 전에는 숫자를 보여주지 않습니다.
 
-| 확인하기 | 사진 올리기 |
-|---|---|
-| <img src="docs/screenshots/review.png" alt="잘못 읽은 줄과 고칠 값 제안" width="420"> | <img src="docs/screenshots/upload.png" alt="통장과 기간 고르기" width="420"> |
+| 사진 올리기 (휴대폰) | 확인하기 |
+|:---:|:---:|
+| <img src="docs/screenshots/upload-mobile.png" alt="통장과 기간 고르기" height="400"> | <img src="docs/screenshots/review.png" alt="잘못 읽은 줄과 고칠 값 제안" height="400"> |
 
 ## 설계에서 지킨 것
 

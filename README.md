@@ -4,9 +4,8 @@
 
 敬老堂（韓国の地域の高齢者向け集会所）の通帳を撮影すると、残高が合っているかを一行ずつ検算したうえで、**区役所に提出する補助金精算報告書に書き写す数字**を示すWebアプリです。報告書はご本人が手で書き、このアプリは各欄に入る数字を正しく揃えることだけを担います。
 
-<p>
-  <img src="docs/screenshots/settlement.png" alt="精算画面：月別執行内訳と総括の表" width="520">
-  <img src="docs/screenshots/settlement-mobile.png" alt="スマートフォンでの精算結果" width="200">
+<p align="center">
+  <img src="docs/screenshots/settlement.png" alt="精算画面：月別執行内訳と総括の表" width="600">
 </p>
 
 ## 作った理由
@@ -22,9 +21,9 @@
 3. **確認**：`前の残高 + 入金 − 出金 = 残高` が崩れる行を見つけ、原因と修正値を提案します。
 4. **精算**：報告書の2つの表（月別執行内訳、総括）に入る数字を表示します。検算が合うまでは数字を表示しません。
 
-| 確認 | 写真のアップロード |
-|---|---|
-| <img src="docs/screenshots/review.png" alt="読み違えた行と修正値の提案" width="420"> | <img src="docs/screenshots/upload.png" alt="通帳と期間の選択" width="420"> |
+| 写真のアップロード（スマートフォン） | 確認 |
+|:---:|:---:|
+| <img src="docs/screenshots/upload-mobile.png" alt="通帳と期間の選択" height="400"> | <img src="docs/screenshots/review.png" alt="読み違えた行と修正値の提案" height="400"> |
 
 ## 設計で守ったこと
 
