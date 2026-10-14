@@ -63,7 +63,7 @@ def test_빈_입력():
 
 
 def test_mock_응답_전체_복원():
-    from ocr.clova_client import call_mock_ocr
+    from ocr.mock_client import call_mock_ocr
     from data.sample_lines import SAMPLE_LINES
 
     assert fields_to_lines(call_mock_ocr(b"")) == SAMPLE_LINES

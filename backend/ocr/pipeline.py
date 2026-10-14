@@ -4,24 +4,21 @@
 이 함수의 지역 변수로만 잠깐 존재한다. 디스크에 쓰지 않고, 로그에도 남기지
 않으며, OCR 응답을 받으면 즉시 참조를 버린다(finally 블록).
 
-엔진별 신뢰 경계:
+엔진:
   - easyocr (기본): 로컬 추론. 평문이 이 기기를 떠나지 않는다 — 외부 전송 구간 없음.
-  - clova: call_clova_ocr() 호출 지점에서 평문이 우리 인프라를 떠나 벤더(네이버)
-    클라우드로 전송된다. 그 구간은 TLS와 벤더의 데이터 정책으로만 보호된다.
-  - mock: 이미지를 읽지 않는 데모용.
+  - mock: 이미지를 읽지 않는 데모·테스트용.
 """
 
 from security.crypto import decrypt_envelope, encrypt_envelope, load_or_create_backend_keypair
 
-from .clova_client import call_clova_ocr, call_mock_ocr
 from .denoise import normalize_lines
 from .easyocr_client import call_easyocr
+from .mock_client import call_mock_ocr
 from .preprocess import crop_document
 from .reconstruct import fields_to_lines
 
 ENGINES = {
     "easyocr": call_easyocr,
-    "clova": call_clova_ocr,
     "mock": call_mock_ocr,
 }
 
@@ -53,7 +50,7 @@ def run_ocr_pipeline(image_bytes: bytes, engine: str = "easyocr",
         # 3) 전처리: 통장 영역만 잘라낸다(메모리 안에서만, 디스크 기록 없음).
         if preprocess and plaintext:
             plaintext = crop_document(plaintext)
-        # 4) OCR 인식 (clova일 때만 평문이 인프라를 떠난다 — 모듈 docstring 참조)
+        # 4) OCR 인식 (이 기기 안에서만)
         ocr_response = ENGINES[engine](plaintext)
     finally:
         # 5) 평문 즉시 폐기(디스크 기록 없음, 참조만 제거).

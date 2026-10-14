@@ -5,8 +5,7 @@
 이미지를 여러 장 주면 각 장을 따로 OCR·파싱한 뒤 잔액을 근거로 이어 붙인다
 (passbook.pages.merge_pages). 사진 순서는 아무래도 좋다 — 잔액이 순서를 정한다.
 
-엔진: easyocr(기본, 로컬 — 금융정보 외부 미전송) | clova(클라우드, 환경변수
-CLOVA_OCR_SECRET_KEY/CLOVA_OCR_INVOKE_URL 필요) | mock(이미지 없이 fixture 데모)
+엔진: easyocr(기본, 로컬 — 금융정보 외부 미전송) | mock(이미지 없이 fixture 데모)
 
 이미지 경로를 생략하면 mock으로 전체 파이프라인(암호화 -> 복호화 -> 인식 -> 파싱)을
 확인한다. 마지막 인자가 이미지 파일이 아니면 엔진 이름으로 본다.
@@ -20,7 +19,7 @@ from passbook.lines import parse_lines
 from passbook.pages import merge_pages
 from report import print_report, print_report_rows
 
-ENGINE_NAMES = {"easyocr", "clova", "mock"}
+ENGINE_NAMES = {"easyocr", "mock"}
 
 
 def _split_args(argv):
