@@ -463,6 +463,9 @@ function finishReading(){
 // 행을 고치면 인덱스가 바뀔 수 있어(거래 넣기) 미정 입금 결정은 다시 받는다.
 function 고치기(fn){ history.push(JSON.parse(JSON.stringify(rows))); fn(); 결정 = {}; render(); }
 const 잔액고치기 = (i,v) => 고치기(() => { rows[i].잔액 = v; });
+// 금액(과 입금/지출 방향)을 고친다. 차이 = 찍힌 잔액 - 앞 잔액: 양수면 입금, 음수면 지출.
+const 금액고치기 = (i,차이) => 고치기(() => { rows[i].입금 = 차이 > 0 ? 차이 : 0; rows[i].지출 = 차이 < 0 ? -차이 : 0; });
+const 금액말 = 차이 => `${차이 > 0 ? '입금' : '지출'} ${won(Math.abs(차이))}`;
 const 그대로두기 = i => 고치기(() => { rows[i].확인됨 = true; });
 function 거래넣기(i,차이){
   고치기(() => {
@@ -510,6 +513,12 @@ function render(){
 
     if(문제){
       const 차이 = x.기대잔액 - x.잔액;
+      // 찍힌 잔액이 맞다고 볼 때 이 줄의 금액이 얼마여야 하는지. 금액을 잘못 읽었거나
+      // 입금/지출 칸을 바꿔 읽은 경우 이 값으로 고치면 앞뒤가 맞는다.
+      const 이전 = x.기대잔액 - x.입금 + x.지출, 금액차이 = x.잔액 - 이전;
+      const 금액칸 = `<div class="manual"><div><label for="a${x.index}">이 줄의 금액 직접 입력 (${x.지출?'지출':'입금'})</label>
+          <input type="text" class="figure" id="a${x.index}" inputmode="numeric" placeholder="${x.지출||x.입금}"></div>
+          <button class="btn ghost" data-a="aman">이 금액으로</button></div>`;
       const w = document.createElement('div');
       w.className = 'fix';
       if(x.상태==='잔액오독'){
@@ -526,15 +535,37 @@ function render(){
           if(!isNaN(v)) 잔액고치기(x.index, v);
         };
       } else if(x.상태==='거래누락'){
-        w.innerHTML = `<p>이 줄 앞에 <b>${차이>0?'지출':'입금'} ${won(Math.abs(차이))}</b>짜리 거래가 빠진 것 같습니다. 통장을 보고 확인해 주세요.</p>
-          <div class="acts"><button class="btn" data-a="add">빠진 거래 넣기</button>
+        // 잔액은 맞는데 계산이 어긋난다: 이 줄의 금액을 잘못 읽었거나, 앞에 거래가 빠졌다.
+        // 숫자만으로는 둘을 가를 수 없어 통장을 보고 고르게 한다.
+        w.innerHTML = `<p>이 줄의 금액을 잘못 읽었거나, 앞에 거래가 빠진 것 같습니다. 통장을 보고 맞는 쪽을 골라 주세요.</p>
+          <div class="acts">${금액차이 ? `<button class="btn" data-a="amt">이 줄을 ${금액말(금액차이)}으로 고치기</button>` : ''}
+          <button class="btn" data-a="add">앞에 빠진 거래(${차이>0?'지출':'입금'} ${won(Math.abs(차이))}) 넣기</button>
           <button class="btn ghost" data-a="keep">통장이 맞습니다</button></div>
+          ${금액칸}
           <p class="why">여기까지 계산하면 ${won(x.기대잔액)}인데 통장에는 ${won(x.잔액)}으로 찍혀 있습니다</p>`;
         w.querySelector('[data-a=add]').onclick = () => 거래넣기(x.index, 차이);
       } else {
-        w.innerHTML = `<p>앞뒤 잔액이 모두 맞지 않습니다. 통장 사진을 직접 보고 확인해 주세요.</p>
-          <div class="acts"><button class="btn ghost" data-a="keep">확인했습니다</button></div>`;
+        w.innerHTML = `<p>앞뒤 잔액이 모두 맞지 않습니다. 통장 사진을 직접 보고, 이 줄의 금액과 잔액 중 틀린 쪽을 고쳐 주세요.</p>
+          <div class="acts">${금액차이 ? `<button class="btn" data-a="amt">금액을 ${금액말(금액차이)}으로 고치기</button>` : ''}
+          <button class="btn" data-a="fix">잔액을 ${won(x.기대잔액)}으로 고치기</button>
+          <button class="btn ghost" data-a="keep">확인했습니다</button></div>
+          ${금액칸}
+          <div class="manual"><div><label for="b${x.index}">잔액 직접 입력</label>
+          <input type="text" class="figure" id="b${x.index}" inputmode="numeric" placeholder="${x.잔액}"></div>
+          <button class="btn ghost" data-a="man">이 잔액으로</button></div>`;
+        w.querySelector('[data-a=fix]').onclick = () => 잔액고치기(x.index, x.기대잔액);
+        w.querySelector('[data-a=man]').onclick = () => {
+          const v = parseInt(w.querySelector(`#b${x.index}`).value.replace(/[^\d]/g,''),10);
+          if(!isNaN(v)) 잔액고치기(x.index, v);
+        };
       }
+      const 금액버튼 = w.querySelector('[data-a=amt]');
+      if(금액버튼) 금액버튼.onclick = () => 금액고치기(x.index, 금액차이);
+      const 금액입력 = w.querySelector('[data-a=aman]');
+      if(금액입력) 금액입력.onclick = () => {
+        const v = parseInt(w.querySelector(`#a${x.index}`).value.replace(/[^\d]/g,''),10);
+        if(!isNaN(v)) 금액고치기(x.index, x.지출 ? -v : v);
+      };
       w.querySelector('[data-a=keep]').onclick = () => 그대로두기(x.index);
       row.appendChild(w);
     }
