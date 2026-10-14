@@ -45,3 +45,46 @@ def test_post_rejects_unknown_engine():
     files = [("files", ("a.jpg", b"x", "image/jpeg"))]
     r = client.post("/api/review", files=files, data={"engine": "nope"})
     assert r.status_code == 400
+
+
+def test_settlement_from_demo_review():
+    # 데모 검토 데이터(실사진 OCR, 부식비 통장)를 그대로 정산에 넘긴다.
+    items = client.get("/api/review").json()["items"]
+    body = {"통장": "부식비", "연도": 2026, "반기": "상반기", "items": items}
+    r = client.post("/api/settlement", json=body)
+    assert r.status_code == 200
+    result = r.json()
+    assert [m["월"] for m in result["월별"]] == [1, 2, 3, 4, 5, 6]
+    assert result["총괄"]["예산액"] == 849_000 * 2          # OCR이 '3분기'의 숫자를 잃어도 보조금
+    assert result["총괄"]["이자"] == 21                     # '결산이 자'로 읽혀도 이자
+    assert [p["사용내역"] for p in result["미정"]] == ["취소-주식"]
+    # 잔액오독·거래누락을 고치지 않은 데이터이므로 완료가 아니다
+    assert result["검산"]["잔액연쇄"] is False
+    assert result["완료"] is False
+
+
+def test_settlement_rejects_unknown_account():
+    body = {"통장": "간식비", "연도": 2026, "반기": "상반기", "items": []}
+    r = client.post("/api/settlement", json=body)
+    assert r.status_code == 400
+
+
+def test_post_review_infers_opening_balance():
+    files = [("files", ("a.jpg", b"x", "image/jpeg"))]
+    r = client.post("/api/review", files=files, data={"engine": "mock"})
+    assert r.json()["시작잔액"] == 0          # mock fixture는 '신규'부터 찍은 통장
+
+
+def test_settlement_rejects_item_without_balance():
+    body = {"통장": "부식비", "연도": 2026, "반기": "상반기",
+            "items": [{"date": "20260320", "입금": 849000}]}
+    r = client.post("/api/settlement", json=body)
+    assert r.status_code == 422
+
+
+def test_settlement_rejects_decision_on_non_pending_row():
+    items = client.get("/api/review").json()["items"]
+    body = {"통장": "부식비", "연도": 2026, "반기": "상반기", "items": items,
+            "결정": {"0": "수입"}}        # 0번은 보조금 입금이다
+    r = client.post("/api/settlement", json=body)
+    assert r.status_code == 400

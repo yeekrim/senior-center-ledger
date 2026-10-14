@@ -8,7 +8,7 @@ import pytest
 
 from data.sample_lines import SAMPLE_LINES
 from passbook.lines import parse_lines
-from passbook.pages import merge_pages, page_closing, page_opening
+from passbook.pages import infer_opening, merge_pages, page_closing, page_opening
 from passbook.verify import verify_balance_chain
 
 
@@ -81,3 +81,20 @@ def test_빈_입력():
     merged, report = merge_pages([])
     assert merged == []
     assert report == {"order": [], "dropped": 0, "gaps": []}
+
+
+def test_시작잔액_추정_신규부터_찍은_통장(rows):
+    assert infer_opening([rows[13:], rows[:7], rows[7:13]]) == 0
+
+
+def test_시작잔액_추정_중간부터_찍은_통장(rows):
+    # 1페이지를 빼고 2, 3페이지만 찍었다 -> 2페이지 첫 거래 직전 잔액
+    assert infer_opening([rows[13:], rows[7:13]]) == page_opening(rows[7:13])
+
+
+def test_시작잔액_추정_겹쳐_찍은_통장(rows):
+    assert infer_opening([rows[5:], rows[:8]]) == 0
+
+
+def test_시작잔액_추정_빈_입력():
+    assert infer_opening([]) == 0

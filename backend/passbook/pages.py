@@ -37,6 +37,22 @@ def page_closing(rows) -> int:
     return to_amount(rows[-1]["잔액"])
 
 
+def infer_opening(pages) -> int:
+    """사진 묶음 전체의 시작 잔액을 통장에서 구한다.
+
+    첫 페이지는 '다른 어떤 페이지의 끝 잔액과도 이어지지 않는' 페이지다. 그런 페이지가
+    여럿이면(겹쳐 찍었거나 중간이 빠졌을 때) 첫 거래 날짜가 가장 이른 것을 고른다.
+    통장을 '신규'부터 찍었다면 0이 나오고, 하반기처럼 중간부터 찍었다면 그 직전 잔액이 나온다.
+    첫 행 잔액을 잘못 읽으면 이 값도 틀리지만, 그때는 둘째 행에서 잔액 연쇄가 깨져 드러난다.
+    """
+    pages = [p for p in pages if p]
+    if not pages:
+        return 0
+    closings = {page_closing(p) for p in pages}
+    starts = [p for p in pages if page_opening(p) not in closings] or pages
+    return page_opening(min(starts, key=lambda p: p[0]["date"]))
+
+
 def _row_key(row):
     return (row["date"], row.get("사용내역", ""),
             to_amount(row["찾으신금액"]), to_amount(row["맡기신금액"]),
