@@ -5,6 +5,9 @@
   월별 집행내역  1~6월(또는 7~12월) 각각  수입액(보조금·이자 등) / 집행액 / 잔액
   총괄          예산액(보조금) / 집행액 / 집행잔액 = 예산액 - 집행액 / 이자
 
+예산액에는 그 반기에 들어온 보조금에 앞 반기에서 넘어온 잔액(이월금 = 시작잔액)을 더한다.
+상반기에 통장을 새로 만들었다면 이월금은 0이다.
+
 보고서는 어르신이 직접 쓰고, 이 모듈은 칸에 들어갈 숫자만 돌려준다.
 
 미정 입금(classify.PENDING)은 사람이 둘 중 하나로 정한다:
@@ -119,9 +122,11 @@ def settle(rows, account: str, year: int, half: str,
         "월별": [{"월": m, **monthly[m]} for m in months],
         "합계": {"수입액": total_income, "집행액": totals["집행액"]},
         "총괄": {
-            "예산액": totals[SUBSIDY],
+            "예산액": opening + totals[SUBSIDY],
+            "이월금": opening,
+            "보조금": totals[SUBSIDY],
             "집행액": totals["집행액"],
-            "집행잔액": totals[SUBSIDY] - totals["집행액"],
+            "집행잔액": opening + totals[SUBSIDY] - totals["집행액"],
             "이자": totals[INTEREST],
             "기타수입": totals["기타수입"],
         },
