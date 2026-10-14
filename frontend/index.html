@@ -40,7 +40,7 @@ body{background:var(--desk);color:var(--ink);font-family:var(--sans);font-size:2
 .sheet{background:var(--paper);border:1px solid var(--rule);box-shadow:0 2px 0 rgba(0,0,0,.14)}
 .sheet+.sheet{margin-top:18px}
 .sheet-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:18px 22px 14px;border-bottom:2px solid var(--ink)}
-.sheet-head h2{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:0}
+.sheet-head h2{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:0;word-break:keep-all}
 .sheet-head span{font-family:var(--mono);font-size:14px;color:var(--ink-soft)}
 .pad{padding:26px 22px}
 h1{font-size:clamp(30px,6vw,44px);font-weight:800;letter-spacing:-.03em;line-height:1.15;margin:0 0 12px}
@@ -134,11 +134,13 @@ input.figure{font-family:var(--mono);max-width:230px}
 .pend .btn{min-height:54px;padding:12px 18px;font-size:18px}
 .pend .btn[aria-pressed=false]{background:transparent;color:var(--stamp)}
 table.form{width:100%;border-collapse:collapse;font-size:19px}
-table.form th,table.form td{border:1px solid var(--rule);padding:12px 14px}
+table.form th,table.form td{border:1px solid var(--rule);padding:12px 14px;word-break:keep-all}
 table.form th{background:var(--band);font-size:16px;font-weight:800;text-align:center}
 table.form th small{display:block;font-size:13px;font-weight:600;color:var(--ink-soft)}
 table.form td{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700}
-table.form td:first-child{text-align:center;font-family:var(--sans)}
+table.form td:first-child{text-align:center;font-family:var(--sans);min-width:3.6em}
+table.form th{white-space:nowrap}
+.tablewrap{overflow-x:auto}
 table.form tr.total td{background:var(--paper);border-top:2px solid var(--ink)}
 table.form td.none{background:repeating-linear-gradient(135deg,transparent 0 10px,var(--rule) 10px 11px)}
 .note{margin:0;padding:18px 22px 26px;color:var(--ink-soft);font-size:17px}
@@ -154,8 +156,10 @@ footer{padding:26px 4px;font-family:var(--mono);font-size:13px;color:var(--ink-s
   .steps div{font-size:13px;padding:9px 4px}
   .pad,.fix,.foot,.note,.pick,.pend{padding-left:14px;padding-right:14px}
   label.drop,.tip{margin-left:14px;margin-right:14px}
-  table.form{font-size:16px}
-  table.form th,table.form td{padding:9px 6px}
+  table.form{font-size:15px}
+  table.form th,table.form td{padding:9px 5px}
+  table.form th{font-size:14px}
+  table.form td{font-size:14px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media print{
@@ -274,17 +278,17 @@ footer{padding:26px 4px;font-family:var(--mono);font-size:13px;color:var(--ink-s
     <div id="report">
       <div class="sheet">
         <div class="sheet-head"><h2 id="mTitle">보조금 월별 집행내역</h2><span>단위: 원</span></div>
-        <table class="form">
+        <div class="tablewrap"><table class="form">
           <thead><tr><th>구분</th><th>수입액<small>(보조금, 이자 등)</small></th><th>집행액</th><th>잔액</th></tr></thead>
           <tbody id="months"></tbody>
-        </table>
+        </table></div>
       </div>
       <div class="sheet">
         <div class="sheet-head"><h2>보조금 집행내역 (총괄)</h2><span>단위: 원</span></div>
-        <table class="form">
+        <div class="tablewrap"><table class="form">
           <thead><tr><th>구분</th><th>예산액<small>(보조금)</small></th><th>집행액</th><th>집행잔액</th><th>이자</th></tr></thead>
           <tbody id="summary"></tbody>
-        </table>
+        </table></div>
         <p class="note" id="mNote"></p>
       </div>
     </div>
@@ -640,6 +644,7 @@ async function renderSettlement(){
 
   const c = r.검산, 메모 = [];
   메모.push(`검산: 시작 잔액 ${won(c.시작잔액)} + 수입 ${won(r.합계.수입액)} − 집행 ${won(r.합계.집행액)} = 통장 잔액 ${won(c.통장잔액)}`);
+  if(t.이월금) 메모.push(`예산액 ${won(t.예산액)} = 앞 반기에서 넘어온 이월금 ${won(t.이월금)} + 이번 반기 보조금 ${won(t.보조금)}`);
   if(t.기타수입) 메모.push(`보조금·이자가 아닌 수입 ${won(t.기타수입)}은 총괄표에 칸이 없습니다. 비고 칸 등에 따로 적어 주세요.`);
   메모.push('총괄표의 합계 줄은 세 통장을 모두 정산한 뒤 더해서 적어 주세요.');
   $('mNote').innerHTML = 메모.map(x => `<span style="display:block">${x}</span>`).join('');
