@@ -363,7 +363,9 @@ function review(list){
     return {...r, index:i, 상태, 기대잔액:expected};
   });
 }
-const 남은확인 = items => items.filter(x => x.상태!=='정상' && x.상태!=='확인함').length;
+// 날짜를 아직 고르지 않은 새 거래도 확인할 곳으로 센다. 날짜가 틀리면 다른 달·반기로 들어간다.
+const 날짜미정 = x => x.새로추가 && !x.날짜확인;
+const 남은확인 = items => items.filter(x => (x.상태!=='정상' && x.상태!=='확인함') || 날짜미정(x)).length;
 
 /* ── 화면 전환 ────────────────────────────── */
 function show(name){
@@ -471,12 +473,18 @@ const 잔액고치기 = (i,v) => 고치기(() => { rows[i].잔액 = v; });
 const 금액고치기 = (i,차이) => 고치기(() => { rows[i].입금 = 차이 > 0 ? 차이 : 0; rows[i].지출 = 차이 < 0 ? -차이 : 0; });
 const 금액말 = 차이 => `${차이 > 0 ? '입금' : '지출'} ${won(Math.abs(차이))}`;
 const 그대로두기 = i => 고치기(() => { rows[i].확인됨 = true; });
+const 날짜고르기 = (i,d) => 고치기(() => { rows[i].date = d; rows[i].날짜확인 = true; });
 function 거래넣기(i,차이){
   고치기(() => {
     const 이전 = i === 0 ? OPENING : rows[i-1].잔액;
     const 지출 = 차이 > 0, 금액 = Math.abs(차이);
-    rows.splice(i,0,{date:rows[i].date, 적요:rows[i].적요, 사용내역:'', 입금:지출?0:금액,
-      지출:지출?금액:0, 잔액:지출?이전-금액:이전+금액, 거래점:'', 확인됨:false, 새로추가:true});
+    // 빠진 거래의 날짜는 앞 줄과 뒷 줄 날짜 사이 어딘가다. 둘이 같으면 그 날짜로 정하고,
+    // 다르면 사람이 고르게 한다 — 6/30 거래를 7/01로 넣으면 상반기 집행액이 빠진다.
+    const 앞날짜 = i === 0 ? null : rows[i-1].date, 뒷날짜 = rows[i].date;
+    const 정해짐 = !앞날짜 || 앞날짜 === 뒷날짜;
+    rows.splice(i,0,{date:뒷날짜, 적요:rows[i].적요, 사용내역:'', 입금:지출?0:금액,
+      지출:지출?금액:0, 잔액:지출?이전-금액:이전+금액, 거래점:'', 확인됨:false, 새로추가:true,
+      날짜확인:정해짐, 날짜범위:[앞날짜 || 뒷날짜, 뒷날짜]});
   });
 }
 
@@ -498,10 +506,10 @@ function render(){
   items.forEach(x => {
     const 문제 = x.상태!=='정상' && x.상태!=='확인함';
     const row = document.createElement('div');
-    row.className = 'row' + (문제?' flag':'') + (x.상태==='확인함'?' fixed':'');
+    row.className = 'row' + (문제 || 날짜미정(x) ?' flag':'') + (x.상태==='확인함'?' fixed':'');
     row.innerHTML = `<div class="rowline">
       <i class="num">${x.index+1}</i>
-      <i class="date">${ymd(x.date)}</i>
+      <i class="date">${날짜미정(x) ? '날짜 고르기' : ymd(x.date)}</i>
       <span class="memo" data-amt="${x.지출?'지출':'입금'} ${won(x.지출||x.입금)}">${x.사용내역 || '내역 없음'}</span>
       <i class="amt ${x.지출?'out':'in'}">${x.지출?'−':'+'}${won(x.지출||x.입금)}</i>
       <i class="bal">${won(x.잔액)}</i></div>`;
@@ -512,6 +520,24 @@ function render(){
       w.innerHTML = `<div class="manual"><div><label for="m${x.index}">이 거래의 가게 이름을 적어 주세요</label>
         <input type="text" id="m${x.index}" value="${x.사용내역}" placeholder="예: 한창건어물"></div></div>`;
       w.querySelector('input').addEventListener('input', e => { rows[x.index].사용내역 = e.target.value; });
+      if(날짜미정(x)){
+        const [앞, 뒤] = x.날짜범위;
+        const d = document.createElement('div');
+        d.innerHTML = `<p>이 거래는 언제였나요? 통장을 보고 날짜를 골라 주세요.</p>
+          <div class="acts"><button class="btn" data-d="${앞}">${md(앞)}</button>
+          <button class="btn" data-d="${뒤}">${md(뒤)}</button></div>
+          <div class="manual"><div><label for="d${x.index}">다른 날짜 (${ymd(앞)} ~ ${ymd(뒤)})</label>
+          <input type="text" class="figure" id="d${x.index}" inputmode="numeric" placeholder="${ymd(앞)}"></div>
+          <button class="btn ghost" data-a="dman">이 날짜로</button></div>
+          <p class="why" data-a="derr" hidden>${ymd(앞)}부터 ${ymd(뒤)} 사이의 날짜를 8자리로 적어 주세요</p>`;
+        d.querySelectorAll('[data-d]').forEach(b => b.onclick = () => 날짜고르기(x.index, b.dataset.d));
+        d.querySelector('[data-a=dman]').onclick = () => {
+          const v = d.querySelector('input').value.replace(/[^\d]/g,'');
+          if(v.length === 8 && 앞 <= v && v <= 뒤) 날짜고르기(x.index, v);
+          else d.querySelector('[data-a=derr]').hidden = false;
+        };
+        w.appendChild(d);
+      }
       row.appendChild(w);
     }
 
@@ -547,11 +573,11 @@ function render(){
           <button class="btn ghost" data-a="keep">통장이 맞습니다</button></div>
           ${금액칸}
           <p class="why">여기까지 계산하면 ${won(x.기대잔액)}인데 통장에는 ${won(x.잔액)}으로 찍혀 있습니다</p>`;
-        w.querySelector('[data-a=add]').onclick = () => 거래넣기(x.index, 차이);
       } else {
         w.innerHTML = `<p>앞뒤 잔액이 모두 맞지 않습니다. 통장 사진을 직접 보고, 이 줄의 금액과 잔액 중 틀린 쪽을 고쳐 주세요.</p>
           <div class="acts">${금액차이 ? `<button class="btn" data-a="amt">금액을 ${금액말(금액차이)}으로 고치기</button>` : ''}
           <button class="btn" data-a="fix">잔액을 ${won(x.기대잔액)}으로 고치기</button>
+          <button class="btn" data-a="add">앞에 빠진 거래(${차이>0?'지출':'입금'} ${won(Math.abs(차이))}) 넣기</button>
           <button class="btn ghost" data-a="keep">확인했습니다</button></div>
           ${금액칸}
           <div class="manual"><div><label for="b${x.index}">잔액 직접 입력</label>
@@ -563,6 +589,8 @@ function render(){
           if(!isNaN(v)) 잔액고치기(x.index, v);
         };
       }
+      const 넣기버튼 = w.querySelector('[data-a=add]');
+      if(넣기버튼) 넣기버튼.onclick = () => 거래넣기(x.index, 차이);
       const 금액버튼 = w.querySelector('[data-a=amt]');
       if(금액버튼) 금액버튼.onclick = () => 금액고치기(x.index, 금액차이);
       const 금액입력 = w.querySelector('[data-a=aman]');
@@ -627,13 +655,15 @@ async function renderSettlement(){
   if(todo) 할일.push(`거래 내역에서 확인할 곳 ${todo}군데`);
   if(남은결정) 할일.push(`정해 주실 입금 ${남은결정}건`);
   if(!todo && !r.검산.잔액연쇄) 할일.push('잔액이 이어지지 않는 곳 (거래 내역을 다시 봐 주세요)');
-  $('sCallout').classList.toggle('done', r.완료);
-  $('sCalloutText').textContent = r.완료
+  // 서버 검산이 맞아도, 확인 화면에 남은 곳(날짜를 고르지 않은 거래 등)이 있으면 완료가 아니다.
+  const 완료 = r.완료 && !todo;
+  $('sCallout').classList.toggle('done', 완료);
+  $('sCalloutText').textContent = 완료
     ? '통장 잔액과 맞습니다. 아래 숫자를 보고서에 옮겨 적어 주세요.'
     : `아직 남은 것: ${할일.join(', ') || '확인할 곳'}`;
-  $('report').hidden = !r.완료;
-  $('printMonths').disabled = !r.완료;
-  if(!r.완료) return;
+  $('report').hidden = !완료;
+  $('printMonths').disabled = !완료;
+  if(!완료) return;
 
   $('months').innerHTML = r.월별.map(m =>
     `<tr><td>${m.월}월</td><td>${num(m.수입액)}</td><td>${num(m.집행액)}</td><td>${num(m.잔액)}</td></tr>`).join('') +
