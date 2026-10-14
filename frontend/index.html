@@ -5,169 +5,194 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>통장 정리 도우미</title>
 <style>
+/* 어르신이 휴대폰으로 보는 화면이다. 본문 22px, 가장 작은 글자도 18px 아래로 내리지 않는다.
+   강조색은 파란색 하나, 확인이 필요한 곳만 빨간색. 카드마다 진한 버튼은 하나만 둔다. */
 :root{
-  --band:#D7E3C3;        /* 통장 녹색 줄 — 이 화면의 바탕 성격 */
-  --paper:#EFEFE6;       /* 통장 종이 (차가운 미색) */
-  --rule:#8C9A7C;        /* 괘선 */
-  --ink:#161A17;         /* 인쇄 잉크 */
-  --ink-soft:#5B655B;
-  --seal:#A8231B;        /* 검인 — 확인이 필요한 곳에만 */
-  --stamp:#14506B;       /* 조작 */
-  --desk:#C9CDBC;        /* 통장이 놓인 바닥 */
-  --sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
-  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --bg:#F2F4F6;
+  --card:#FFFFFF;
+  --line:#E5E8EB;
+  --ink:#191F28;
+  --ink-soft:#4E5968;
+  --blue:#1B64DA;
+  --blue-soft:#E8F1FD;
+  --red:#D92D20;
+  --red-soft:#FDECEB;
+  --green:#0E7C3A;
+  --green-soft:#E6F4EC;
+  --sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic",sans-serif;
+  --r:20px;
 }
 *{box-sizing:border-box}
 /* display를 지정한 요소(.steps 등)에서 hidden 속성이 무시되는 것을 막는다 */
 [hidden]{display:none!important}
 html,body{margin:0}
-body{background:var(--desk);color:var(--ink);font-family:var(--sans);font-size:20px;line-height:1.6;-webkit-text-size-adjust:100%}
-.app{max-width:960px;margin:0 auto;padding:0 16px 80px}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:22px;line-height:1.55;-webkit-text-size-adjust:100%;word-break:keep-all}
+.app{max-width:880px;margin:0 auto;padding:0 16px 96px}
+b{font-weight:800}
 
 /* ── 상단 ─────────────────────────────────── */
-.brand{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:20px 4px 16px;flex-wrap:wrap}
-.brand b{font-size:19px;font-weight:800;letter-spacing:-.02em}
-.brand span{font-family:var(--mono);font-size:14px;color:var(--ink-soft)}
-.linkbtn{background:none;border:0;padding:8px 2px;font-size:17px;font-weight:700;color:var(--stamp);text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+.brand{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:22px 4px 14px;flex-wrap:wrap}
+.brand b{font-size:24px;letter-spacing:-.02em}
+.linkbtn{background:none;border:0;padding:10px 4px;font:inherit;font-size:20px;font-weight:700;color:var(--blue);cursor:pointer}
 
-.steps{display:flex;margin-bottom:18px;border:1px solid var(--rule);background:var(--paper)}
-.steps div{flex:1;padding:11px 8px;text-align:center;font-size:15px;font-weight:700;color:var(--ink-soft);border-right:1px solid var(--rule)}
-.steps div:last-child{border-right:0}
-.steps div.on{background:var(--ink);color:var(--paper)}
-.steps div.past{background:var(--band);color:var(--ink)}
+.steps{display:flex;gap:8px;margin:0 0 20px;padding:0;list-style:none}
+.steps div{flex:1;padding:12px 6px;text-align:center;font-size:18px;font-weight:700;color:var(--ink-soft);background:var(--card);border-radius:14px}
+.steps div.on{background:var(--blue);color:#fff}
+.steps div.past{background:var(--blue-soft);color:var(--blue)}
 
-/* ── 종이 ─────────────────────────────────── */
-.sheet{background:var(--paper);border:1px solid var(--rule);box-shadow:0 2px 0 rgba(0,0,0,.14)}
-.sheet+.sheet{margin-top:18px}
-.sheet-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:18px 22px 14px;border-bottom:2px solid var(--ink)}
-.sheet-head h2{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:0;word-break:keep-all}
-.sheet-head span{font-family:var(--mono);font-size:14px;color:var(--ink-soft)}
-.pad{padding:26px 22px}
-h1{font-size:clamp(30px,6vw,44px);font-weight:800;letter-spacing:-.03em;line-height:1.15;margin:0 0 12px}
-.lede{font-size:21px;margin:0;max-width:44ch}
+/* ── 카드 ─────────────────────────────────── */
+.sheet{background:var(--card);border-radius:var(--r);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.sheet+.sheet{margin-top:16px}
+.sheet-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:24px 24px 12px}
+.sheet-head h2{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:0}
+.sheet-head span{font-size:18px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.pad{padding:28px 24px}
+h1{font-size:clamp(32px,6.4vw,42px);font-weight:800;letter-spacing:-.03em;line-height:1.25;margin:0 0 14px}
+.lede{font-size:22px;color:var(--ink-soft);margin:0;max-width:30em}
 
-button{font:inherit;border-radius:0}
-.btn{min-height:60px;padding:15px 26px;font-size:19px;font-weight:700;border:2px solid var(--stamp);background:var(--stamp);color:#fff;cursor:pointer}
-.btn.ghost{background:transparent;color:var(--stamp)}
-.btn.quiet{border-color:var(--rule);background:transparent;color:var(--ink-soft)}
-.btn:disabled{opacity:.4;cursor:not-allowed}
-.btn:hover:not(:disabled){opacity:.88}
-.btn:focus-visible,input:focus-visible,label.drop:focus-within{outline:4px solid var(--seal);outline-offset:3px}
+/* ── 버튼 ─────────────────────────────────── */
+button{font:inherit}
+.btn{min-height:64px;padding:14px 26px;font-size:22px;font-weight:700;border:0;border-radius:16px;background:var(--blue);color:#fff;cursor:pointer;text-align:center}
+.btn.ghost,.btn.choice{background:var(--card);color:var(--blue);box-shadow:inset 0 0 0 2px var(--blue)}
+.btn.quiet{background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 2px #D1D6DB}
+.btn:disabled{background:#B0B8C1;color:#fff;box-shadow:none;cursor:not-allowed}
+.btn:active:not(:disabled){transform:scale(.98)}
+.btn:focus-visible,input:focus-visible,summary:focus-visible,label.drop:focus-within{outline:4px solid #F5A623;outline-offset:3px}
 .acts{display:flex;flex-wrap:wrap;gap:12px}
-.foot{padding:0 22px 26px}
+.foot{padding:0 24px 28px}
+.foot.acts .btn{flex:1 1 220px}
 
-/* ── 사진 올리기 ───────────────────────────── */
-label.drop{display:block;margin:0 22px 22px;padding:46px 20px;text-align:center;cursor:pointer;border:3px dashed var(--rule);background:repeating-linear-gradient(var(--band) 0 30px,transparent 30px 60px)}
-label.drop:hover,label.drop.over{border-color:var(--stamp)}
-label.drop strong{display:block;font-size:24px;font-weight:800;margin-bottom:8px}
-label.drop small{color:var(--ink-soft);font-size:18px}
-label.drop input{position:absolute;width:1px;height:1px;opacity:0}
-.shots{display:flex;flex-wrap:wrap;gap:12px;padding:0 22px 22px}
-.shot{width:104px;border:1px solid var(--rule);background:#fff;margin:0}
-.shot img{display:block;width:100%;height:132px;object-fit:cover}
-.shot p{margin:0;padding:6px;font-family:var(--mono);font-size:12px;color:var(--ink-soft);text-align:center}
-
-/* ── 읽는 중 ──────────────────────────────── */
-.tasks{list-style:none;margin:0 0 22px;padding:0}
-.tasks li{display:flex;align-items:center;gap:12px;padding:11px 0;font-size:19px;color:var(--ink-soft);border-bottom:1px solid rgba(140,154,124,.4)}
-.tasks li:last-child{border-bottom:0}
-.tasks li.on{color:var(--ink);font-weight:700}
-.tasks li.done{color:var(--ink)}
-.dot{width:13px;height:13px;border:2px solid var(--rule);flex:none}
-.tasks li.on .dot{background:var(--stamp);border-color:var(--stamp)}
-.tasks li.done .dot{background:var(--ink);border-color:var(--ink)}
-.print{border:1px solid var(--rule);background:var(--paper);min-height:180px;max-height:300px;overflow:hidden}
-.print div{font-family:var(--mono);font-size:15px;padding:7px 12px;white-space:pre;overflow:hidden;text-overflow:ellipsis}
-.print div:nth-child(odd){background:var(--band)}
-.print div.pending{font-family:var(--sans);white-space:normal;color:var(--ink-soft);background:none;padding:22px 16px}
-
-/* ── 거래 내역 ─────────────────────────────── */
-.cols,.rowline{display:grid;grid-template-columns:42px 118px 1fr 128px 132px;align-items:center;gap:10px}
-.cols{padding:11px 22px;border-bottom:1px solid var(--rule);font-family:var(--mono);font-size:14px;color:var(--ink-soft);font-weight:700}
-.cols .r{text-align:right}
-.row{border-bottom:1px solid rgba(140,154,124,.4);position:relative}
-.row:nth-child(odd) .rowline{background:var(--band)}
-.rowline{padding:14px 22px;min-height:62px}
-.num,.date,.amt,.bal{font-family:var(--mono);font-variant-numeric:tabular-nums;font-style:normal}
-.num{font-size:14px;color:var(--ink-soft)}
-.date{font-size:17px}
-.memo{font-size:19px;overflow-wrap:anywhere}
-.amt,.bal{text-align:right;font-size:19px}
-.amt.in{color:var(--stamp);font-weight:700}
-.bal{font-weight:700}
-.row.flag{border-left:10px solid var(--seal);background:var(--paper);box-shadow:0 8px 22px rgba(22,26,23,.2);z-index:2;margin:12px 0}
-.row.flag .rowline{background:transparent}
-.row.flag .bal{color:var(--seal)}
-.row.fixed{border-left:10px solid var(--stamp);box-shadow:none}
-.fix{padding:2px 22px 22px;border-top:1px dashed var(--rule)}
-.fix p{margin:14px 0 16px;font-size:20px;max-width:52ch}
-.fix .why{font-family:var(--mono);font-size:14px;color:var(--ink-soft);margin:14px 0 0}
-.manual{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-top:16px}
-.manual label{font-size:17px;color:var(--ink-soft);display:block;margin-bottom:6px}
-input[type=text]{font:inherit;font-size:20px;padding:13px 14px;min-height:58px;border:2px solid var(--rule);background:#fff;color:var(--ink);width:100%;max-width:300px}
-input.figure{font-family:var(--mono);max-width:230px}
-.callout{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;padding:18px 22px;background:var(--paper);border:2px solid var(--seal);border-left-width:10px;margin-bottom:16px}
-.callout.done{border-color:var(--stamp)}
-.callout p{margin:0;font-size:20px;font-weight:700}
-.callout.done p{color:var(--stamp)}
-
-/* ── 통장 · 기간 고르기 ─────────────────────── */
-.pick{border:0;margin:0;padding:0 22px 18px}
-.pick legend{font-size:19px;font-weight:800;padding:0;margin-bottom:10px}
+/* ── 1. 사진 올리기 ───────────────────────── */
+.pick{border:0;margin:0;padding:6px 24px 20px}
+.pick legend{font-size:22px;font-weight:800;padding:0;margin-bottom:12px}
 .choices{display:flex;flex-wrap:wrap;gap:10px}
 .choices label{position:relative;cursor:pointer}
 .choices input[type=radio]{position:absolute;opacity:0;width:1px;height:1px}
-.choices span{display:flex;align-items:center;min-height:60px;padding:12px 22px;font-size:19px;font-weight:700;border:2px solid var(--rule);background:#fff}
-.choices input:checked+span{border-color:var(--stamp);background:var(--stamp);color:#fff}
-.choices input:focus-visible+span{outline:4px solid var(--seal);outline-offset:3px}
+.choices span{display:flex;align-items:center;min-height:64px;padding:12px 22px;font-size:22px;font-weight:700;border-radius:16px;background:var(--bg);color:var(--ink)}
+.choices input:checked+span{background:var(--blue);color:#fff}
+.choices input:focus-visible+span{outline:4px solid #F5A623;outline-offset:3px}
 .choices label.year{display:flex;align-items:center;gap:8px}
-.choices label.year input{width:110px;text-align:center}
-.choices label.year span{border:0;background:none;padding:0;min-height:0}
-.tip{margin:0 22px 22px;font-size:17px;color:var(--ink-soft);max-width:52ch}
+.choices label.year input{width:120px;text-align:center}
+.choices label.year span{background:none;padding:0;min-height:0}
+label.drop{display:block;margin:4px 24px 16px;padding:40px 20px;text-align:center;cursor:pointer;border:3px dashed #B0B8C1;border-radius:var(--r);background:var(--bg)}
+label.drop:hover,label.drop.over{border-color:var(--blue);background:var(--blue-soft)}
+label.drop strong{display:block;font-size:26px;font-weight:800;color:var(--blue);margin-bottom:6px}
+label.drop small{color:var(--ink-soft);font-size:20px}
+label.drop input{position:absolute;width:1px;height:1px;opacity:0}
+.tip{margin:0 24px 20px;padding:16px 18px;font-size:20px;color:var(--ink-soft);background:var(--bg);border-radius:14px}
+.tip.error{background:var(--red-soft);color:var(--red);font-weight:700}
+.shots{display:flex;flex-wrap:wrap;gap:12px;padding:0 24px 20px}
+.shot{width:112px;margin:0;border-radius:12px;overflow:hidden;background:var(--bg)}
+.shot img{display:block;width:100%;height:140px;object-fit:cover}
+.shot p{margin:0;padding:6px;font-size:18px;color:var(--ink-soft);text-align:center}
 
-/* ── 정산하기 ─────────────────────────────── */
-.pend{display:flex;flex-wrap:wrap;gap:12px 22px;align-items:center;justify-content:space-between;padding:16px 22px;border-top:1px solid rgba(140,154,124,.4)}
-.pend.todo{border-left:10px solid var(--seal)}
-.pend .what{font-size:19px}
-.pend .what i{font-family:var(--mono);font-style:normal;font-size:16px;color:var(--ink-soft);margin-right:10px}
-.pend .what b{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--stamp);margin-left:10px}
-.pend .btn{min-height:54px;padding:12px 18px;font-size:18px}
-.pend .btn[aria-pressed=false]{background:transparent;color:var(--stamp)}
-table.form{width:100%;border-collapse:collapse;font-size:19px}
-table.form th,table.form td{border:1px solid var(--rule);padding:12px 14px;word-break:keep-all}
-table.form th{background:var(--band);font-size:16px;font-weight:800;text-align:center}
-table.form th small{display:block;font-size:13px;font-weight:600;color:var(--ink-soft)}
-table.form td{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700}
-table.form td:first-child{text-align:center;font-family:var(--sans);min-width:3.6em}
-table.form th{white-space:nowrap}
-.tablewrap{overflow-x:auto}
-table.form tr.total td{background:var(--paper);border-top:2px solid var(--ink)}
-table.form td.none{background:repeating-linear-gradient(135deg,transparent 0 10px,var(--rule) 10px 11px)}
-.note{margin:0;padding:18px 22px 26px;color:var(--ink-soft);font-size:17px}
-footer{padding:26px 4px;font-family:var(--mono);font-size:13px;color:var(--ink-soft)}
+/* ── 2. 읽는 중 ──────────────────────────── */
+.tasks{list-style:none;margin:0 0 24px;padding:0}
+.tasks li{display:flex;align-items:center;gap:14px;padding:12px 0;font-size:22px;color:#8B95A1}
+.tasks li.on{color:var(--ink);font-weight:800}
+.tasks li.done{color:var(--ink)}
+.dot{width:18px;height:18px;border-radius:50%;border:3px solid #B0B8C1;flex:none}
+.tasks li.on .dot{border-color:var(--blue);background:var(--blue)}
+.tasks li.done .dot{border-color:var(--green);background:var(--green)}
+.print{background:var(--bg);border-radius:14px;min-height:160px;max-height:300px;overflow:hidden;padding:8px 0}
+.print div{font-size:18px;padding:6px 16px;white-space:pre;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.print div.pending{white-space:normal;color:var(--ink-soft);font-size:20px;padding:22px 16px}
 
+/* ── 3. 확인하기 ──────────────────────────── */
+.callout{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;padding:22px 24px;margin-bottom:16px;background:var(--red-soft);border-radius:var(--r)}
+.callout p{margin:0;font-size:24px;font-weight:800;color:var(--red)}
+.callout.done{background:var(--green-soft)}
+.callout.done p{color:var(--green)}
+.cols{display:none}
+.row{position:relative;border-top:1px solid var(--line)}
+.rowline{display:grid;grid-template-columns:1fr auto;grid-template-areas:"d b" "m b";column-gap:16px;row-gap:2px;align-items:center;padding:18px 24px}
+.num{display:none}
+.date{grid-area:d;font-style:normal;font-size:18px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.memo{grid-area:m;font-size:22px;font-weight:700;overflow-wrap:anywhere}
+.memo::after{content:attr(data-amt);display:block;font-size:20px;font-weight:600;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.amt{display:none}
+.bal{grid-area:b;font-style:normal;text-align:right;font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+.bal::before{content:"잔액";display:block;font-size:18px;font-weight:600;color:var(--ink-soft)}
+.row.flag{background:var(--red-soft);border-top:0;margin:12px;border-radius:16px;box-shadow:inset 0 0 0 2px var(--red)}
+.row.flag .bal{color:var(--red)}
+.row.fixed .bal{color:var(--green)}
+.fix{padding:0 24px 22px}
+.fix p{margin:0 0 16px;font-size:22px;font-weight:700}
+.fix .acts{flex-direction:column;align-items:stretch}
+.fix .acts .btn{width:100%}
+.fix .why{font-size:18px;font-weight:500;color:var(--ink-soft);margin:14px 0 0}
+details.more{margin-top:14px}
+details.more summary{cursor:pointer;font-size:20px;font-weight:700;color:var(--blue);padding:10px 0;list-style:none}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::after{content:" ›"}
+details.more[open] summary::after{content:" ⌄"}
+details.more .acts{margin-top:8px}
+.manual{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-top:14px}
+.manual>div{flex:1 1 220px}
+.manual label{font-size:20px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:6px}
+.manual .btn{flex:0 0 auto}
+input[type=text]{font:inherit;font-size:22px;padding:14px 16px;min-height:64px;border:2px solid #D1D6DB;border-radius:14px;background:#fff;color:var(--ink);width:100%}
+input[type=text]:focus{border-color:var(--blue)}
+input.figure{font-variant-numeric:tabular-nums}
+
+/* ── 4. 정산하기 ─────────────────────────── */
+.pend{padding:18px 24px;border-top:1px solid var(--line)}
+.pend.todo{background:var(--red-soft)}
+.pend .what{display:block;font-size:22px;font-weight:700;margin-bottom:12px}
+.pend .what i{font-style:normal;font-size:18px;font-weight:600;color:var(--ink-soft);display:block}
+.pend .what b{color:var(--blue);margin-left:8px;font-variant-numeric:tabular-nums}
+.pend .acts .btn{flex:1 1 200px}
+.pend .btn[aria-pressed=false]{background:var(--card);color:var(--blue);box-shadow:inset 0 0 0 2px var(--blue)}
+.tablewrap{overflow-x:auto;padding:0 12px 8px}
+table.form{width:100%;border-collapse:collapse;font-size:22px}
+table.form th,table.form td{padding:14px 12px;border-bottom:1px solid var(--line);word-break:keep-all}
+table.form th{font-size:18px;font-weight:700;color:var(--ink-soft);text-align:right;white-space:nowrap}
+table.form th:first-child{text-align:left}
+table.form th small{display:block;font-size:18px;font-weight:500}
+table.form td{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+table.form td:first-child{text-align:left;font-weight:800;min-width:3.6em}
+table.form tr.total td{border-top:2px solid var(--ink);border-bottom:0;background:var(--bg)}
+table.form td.none{color:transparent}
+.note{margin:0;padding:18px 24px 26px;color:var(--ink-soft);font-size:20px}
+footer{padding:28px 4px;font-size:18px;color:var(--ink-soft)}
+
+@media (min-width:721px){
+  .cols{display:grid;grid-template-columns:150px 1fr 170px 170px;gap:12px;padding:8px 24px 10px;font-size:18px;font-weight:700;color:var(--ink-soft)}
+  .cols i{font-style:normal}.cols .r{text-align:right}.cols i:first-child{display:none}
+  .rowline{grid-template-columns:150px 1fr 170px 170px;grid-template-areas:"d m a b";column-gap:12px}
+  .date{font-size:20px}
+  .memo::after{content:none}
+  .amt{display:block;grid-area:a;font-style:normal;text-align:right;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+  .amt.in{color:var(--blue)}
+  .bal::before{content:none}
+}
 @media (max-width:720px){
-  body{font-size:19px}
-  .cols{display:none}
-  .rowline{grid-template-columns:34px 1fr auto;grid-template-areas:"n d b" "n m b";row-gap:2px;padding:13px 14px}
-  .num{grid-area:n}.date{grid-area:d}.memo{grid-area:m}.bal{grid-area:b}
-  .amt{display:none}
-  .memo::after{content:attr(data-amt);display:block;font-family:var(--mono);font-size:17px;color:var(--ink-soft)}
-  .steps div{font-size:13px;padding:9px 4px}
-  .pad,.fix,.foot,.note,.pick,.pend{padding-left:14px;padding-right:14px}
-  label.drop,.tip{margin-left:14px;margin-right:14px}
-  table.form{font-size:15px}
-  table.form th,table.form td{padding:9px 5px}
-  table.form th{font-size:14px}
-  table.form td{font-size:14px}
+  body{font-size:21px}
+  .steps{gap:6px}
+  .steps div{font-size:18px;padding:10px 2px}
+  .pad,.fix,.foot,.note,.pick,.pend,.sheet-head{padding-left:18px;padding-right:18px}
+  label.drop,.tip{margin-left:18px;margin-right:18px}
+  .rowline{padding:16px 18px}
+  /* 표를 가로로 밀어 보게 하지 않는다. 한 줄(한 달)을 카드 한 장으로 세운다. */
+  .tablewrap{padding:0 18px 8px}
+  table.form thead{display:none}
+  table.form,table.form tbody,table.form tr,table.form td{display:block;width:100%}
+  table.form tr{padding:12px 0;border-bottom:1px solid var(--line)}
+  table.form td{display:flex;justify-content:space-between;gap:12px;border:0;padding:4px 0;font-size:22px}
+  table.form td::before{content:attr(data-label);font-weight:600;color:var(--ink-soft);font-size:20px}
+  table.form td:first-child{font-size:24px;padding-bottom:6px}
+  table.form td:first-child::before{content:none}
+  table.form tr.total{border-bottom:0;background:var(--bg);border-radius:14px;padding:12px 14px;margin-top:8px}
+  table.form tr.total td{border:0;background:none}
+  table.form td.none{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media print{
   body{background:#fff;font-size:13pt}
   .brand,.steps,.acts,.foot,footer,.callout,#s-upload,#s-reading,#s-review,#pendingSheet{display:none!important}
   .app{max-width:none;padding:0}
-  .sheet{border:0;box-shadow:none}
-  table.form th{background:#eee}
+  .sheet{box-shadow:none}
+  table.form th,table.form td{border:1px solid #999}
 }
 </style>
 </head>
@@ -180,10 +205,10 @@ footer{padding:26px 4px;font-family:var(--mono);font-size:13px;color:var(--ink-s
   </div>
 
   <div class="steps" id="steps">
-    <div>1 · 사진 올리기</div>
-    <div>2 · 읽는 중</div>
-    <div>3 · 확인하기</div>
-    <div>4 · 정산하기</div>
+    <div>1 사진</div>
+    <div>2 읽기</div>
+    <div>3 확인</div>
+    <div>4 정산</div>
   </div>
 
   <!-- 1. 사진 올리기 ──────────────────────────── -->
@@ -216,6 +241,7 @@ footer{padding:26px 4px;font-family:var(--mono);font-size:13px;color:var(--ink-s
       </label>
       <p class="tip">손이 흔들리면 숫자를 잘못 읽습니다. 통장을 바닥에 펴 놓고, 한 장에 반쪽씩 가까이 찍어도 됩니다. 겹쳐 찍어도 알아서 이어 붙입니다.</p>
       <div class="shots" id="shots"></div>
+      <p class="tip error" id="uploadError" role="alert" hidden></p>
       <div class="foot acts">
         <button class="btn" id="start" disabled>읽기 시작</button>
         <button class="btn quiet" id="demo">사진 없이 둘러보기</button>
@@ -320,14 +346,22 @@ async function fetchDemoReview(){
     return await res.json();
   }catch(_){ return null; }
 }
+// 사진은 데모와 달리 폴백하지 않는다. 실패했는데 데모 숫자를 보여주면 남의 숫자를
+// 내 통장으로 착각한다. 그래서 {data} 또는 {error}를 돌려주고, 호출한 쪽이 안내한다.
 async function uploadReview(files){
+  let res;
   try{
     const form = new FormData();
     [...files].forEach(f => form.append('files', f));
-    const res = await fetch('/api/review', {method:'POST', body:form});
-    if(!res.ok) return null;
-    return await res.json();
-  }catch(_){ return null; }
+    res = await fetch('/api/review', {method:'POST', body:form});
+  }catch(_){
+    return {error:'사진을 읽는 프로그램(서버)에 연결하지 못했습니다. 프로그램이 켜져 있는지 확인해 주세요.'};
+  }
+  if(!res.ok){
+    const detail = await res.json().then(b => b.detail, () => null);
+    return {error:`사진을 읽지 못했습니다. ${typeof detail === 'string' ? detail : '다시 시도해 주세요.'}`};
+  }
+  return {data: await res.json()};
 }
 
 async function postSettlement(body){
@@ -399,9 +433,18 @@ function addShots(files){
 $('start').onclick = async () => {
   // 읽는 중 화면을 먼저 띄운다 — 실제 OCR은 수십 초~수 분 걸릴 수 있어서,
   // 그동안 화면이 멈춘 것처럼 보이면 안 된다. 서버 응답을 받은 뒤 결과를 재생한다.
+  $('uploadError').hidden = true;
   enterReading(shots.length);
-  const result = shots.length ? await uploadReview(shots) : null;
-  DATA = result || RAW;   // 서버가 없거나 실패하면 RAW 데모로 폴백
+  const {data, error} = await uploadReview(shots);
+  const 실패 = error || (!data.items.length &&
+    '사진에서 거래를 하나도 읽지 못했습니다. 통장을 펴 놓고 더 가까이, 흔들리지 않게 다시 찍어 주세요.');
+  if(실패){
+    $('uploadError').textContent = 실패;
+    $('uploadError').hidden = false;
+    show('upload');
+    return;
+  }
+  DATA = data;
   playPrinter();
 };
 $('demo').onclick = async () => {
@@ -523,13 +566,14 @@ function render(){
       if(날짜미정(x)){
         const [앞, 뒤] = x.날짜범위;
         const d = document.createElement('div');
-        d.innerHTML = `<p>이 거래는 언제였나요? 통장을 보고 날짜를 골라 주세요.</p>
-          <div class="acts"><button class="btn" data-d="${앞}">${md(앞)}</button>
-          <button class="btn" data-d="${뒤}">${md(뒤)}</button></div>
-          <div class="manual"><div><label for="d${x.index}">다른 날짜 (${ymd(앞)} ~ ${ymd(뒤)})</label>
+        d.innerHTML = `<p style="margin-top:18px">이 거래는 언제였나요? 통장을 보고 골라 주세요.</p>
+          <div class="acts"><button class="btn choice" data-d="${앞}">${md(앞)}</button>
+          <button class="btn choice" data-d="${뒤}">${md(뒤)}</button></div>
+          <details class="more"><summary>다른 날짜 적기</summary>
+          <div class="manual"><div><label for="d${x.index}">${ymd(앞)} ~ ${ymd(뒤)} 사이</label>
           <input type="text" class="figure" id="d${x.index}" inputmode="numeric" placeholder="${ymd(앞)}"></div>
           <button class="btn ghost" data-a="dman">이 날짜로</button></div>
-          <p class="why" data-a="derr" hidden>${ymd(앞)}부터 ${ymd(뒤)} 사이의 날짜를 8자리로 적어 주세요</p>`;
+          <p class="why" data-a="derr" hidden>${ymd(앞)}부터 ${ymd(뒤)} 사이의 날짜를 8자리로 적어 주세요</p></details>`;
         d.querySelectorAll('[data-d]').forEach(b => b.onclick = () => 날짜고르기(x.index, b.dataset.d));
         d.querySelector('[data-a=dman]').onclick = () => {
           const v = d.querySelector('input').value.replace(/[^\d]/g,'');
@@ -546,19 +590,20 @@ function render(){
       // 찍힌 잔액이 맞다고 볼 때 이 줄의 금액이 얼마여야 하는지. 금액을 잘못 읽었거나
       // 입금/지출 칸을 바꿔 읽은 경우 이 값으로 고치면 앞뒤가 맞는다.
       const 이전 = x.기대잔액 - x.입금 + x.지출, 금액차이 = x.잔액 - 이전;
-      const 금액칸 = `<div class="manual"><div><label for="a${x.index}">이 줄의 금액 직접 입력 (${x.지출?'지출':'입금'})</label>
+      const 금액칸 = `<div class="manual"><div><label for="a${x.index}">${x.지출?'지출':'입금'} 금액 직접 적기</label>
           <input type="text" class="figure" id="a${x.index}" inputmode="numeric" placeholder="${x.지출||x.입금}"></div>
           <button class="btn ghost" data-a="aman">이 금액으로</button></div>`;
       const w = document.createElement('div');
       w.className = 'fix';
       if(x.상태==='잔액오독'){
-        w.innerHTML = `<p>통장에 찍힌 잔액이 <b>${won(x.기대잔액)}</b>인데 <b>${won(x.잔액)}</b>으로 읽혔습니다.</p>
-          <div class="acts"><button class="btn" data-a="fix">${won(x.기대잔액)}으로 고치기</button>
-          <button class="btn ghost" data-a="keep">통장이 맞습니다</button></div>
-          <div class="manual"><div><label for="b${x.index}">직접 입력</label>
+        w.innerHTML = `<p>잔액을 잘못 읽은 것 같아요. 통장에는 <b>${won(x.기대잔액)}</b>으로 찍혀 있을 거예요.</p>
+          <div class="acts"><button class="btn" data-a="fix">${won(x.기대잔액)}으로 고치기</button></div>
+          <details class="more"><summary>다른 방법 보기</summary>
+          <div class="acts"><button class="btn ghost" data-a="keep">통장에 찍힌 값이 맞습니다</button></div>
+          <div class="manual"><div><label for="b${x.index}">잔액 직접 적기</label>
           <input type="text" class="figure" id="b${x.index}" inputmode="numeric" placeholder="${x.기대잔액}"></div>
-          <button class="btn ghost" data-a="man">이 값으로</button></div>
-          <p class="why">앞 잔액 ${won(x.기대잔액 - x.입금 + x.지출)} ${x.지출?'−':'+'} ${won(x.지출||x.입금)} = ${won(x.기대잔액)}</p>`;
+          <button class="btn ghost" data-a="man">이 잔액으로</button></div>
+          <p class="why">계산: 앞 잔액 ${won(x.기대잔액 - x.입금 + x.지출)} ${x.지출?'−':'+'} ${won(x.지출||x.입금)} = ${won(x.기대잔액)}</p></details>`;
         w.querySelector('[data-a=fix]').onclick = () => 잔액고치기(x.index, x.기대잔액);
         w.querySelector('[data-a=man]').onclick = () => {
           const v = parseInt(w.querySelector('input').value.replace(/[^\d]/g,''),10);
@@ -567,22 +612,24 @@ function render(){
       } else if(x.상태==='거래누락'){
         // 잔액은 맞는데 계산이 어긋난다: 이 줄의 금액을 잘못 읽었거나, 앞에 거래가 빠졌다.
         // 숫자만으로는 둘을 가를 수 없어 통장을 보고 고르게 한다.
-        w.innerHTML = `<p>이 줄의 금액을 잘못 읽었거나, 앞에 거래가 빠진 것 같습니다. 통장을 보고 맞는 쪽을 골라 주세요.</p>
-          <div class="acts">${금액차이 ? `<button class="btn" data-a="amt">이 줄을 ${금액말(금액차이)}으로 고치기</button>` : ''}
-          <button class="btn" data-a="add">앞에 빠진 거래(${차이>0?'지출':'입금'} ${won(Math.abs(차이))}) 넣기</button>
-          <button class="btn ghost" data-a="keep">통장이 맞습니다</button></div>
+        w.innerHTML = `<p>금액을 잘못 읽었거나, 앞에 거래가 하나 빠진 것 같아요. 통장을 보고 맞는 쪽을 골라 주세요.</p>
+          <div class="acts">${금액차이 ? `<button class="btn choice" data-a="amt">이 줄을 ${금액말(금액차이)}으로 고치기</button>` : ''}
+          <button class="btn choice" data-a="add">앞에 빠진 ${차이>0?'지출':'입금'} ${won(Math.abs(차이))} 넣기</button></div>
+          <details class="more"><summary>다른 방법 보기</summary>
+          <div class="acts"><button class="btn ghost" data-a="keep">통장과 똑같습니다</button></div>
           ${금액칸}
-          <p class="why">여기까지 계산하면 ${won(x.기대잔액)}인데 통장에는 ${won(x.잔액)}으로 찍혀 있습니다</p>`;
+          <p class="why">여기까지 계산하면 ${won(x.기대잔액)}인데 통장에는 ${won(x.잔액)}으로 찍혀 있어요</p></details>`;
       } else {
-        w.innerHTML = `<p>앞뒤 잔액이 모두 맞지 않습니다. 통장 사진을 직접 보고, 이 줄의 금액과 잔액 중 틀린 쪽을 고쳐 주세요.</p>
-          <div class="acts">${금액차이 ? `<button class="btn" data-a="amt">금액을 ${금액말(금액차이)}으로 고치기</button>` : ''}
-          <button class="btn" data-a="fix">잔액을 ${won(x.기대잔액)}으로 고치기</button>
-          <button class="btn" data-a="add">앞에 빠진 거래(${차이>0?'지출':'입금'} ${won(Math.abs(차이))}) 넣기</button>
-          <button class="btn ghost" data-a="keep">확인했습니다</button></div>
+        w.innerHTML = `<p>이 줄이 앞뒤와 맞지 않아요. 통장을 보고 틀린 곳을 골라 주세요.</p>
+          <div class="acts">${금액차이 ? `<button class="btn choice" data-a="amt">금액이 틀림: ${금액말(금액차이)}</button>` : ''}
+          <button class="btn choice" data-a="fix">잔액이 틀림: ${won(x.기대잔액)}</button>
+          <button class="btn choice" data-a="add">앞에 빠진 ${차이>0?'지출':'입금'} ${won(Math.abs(차이))} 넣기</button></div>
+          <details class="more"><summary>다른 방법 보기</summary>
+          <div class="acts"><button class="btn ghost" data-a="keep">통장과 똑같습니다</button></div>
           ${금액칸}
-          <div class="manual"><div><label for="b${x.index}">잔액 직접 입력</label>
+          <div class="manual"><div><label for="b${x.index}">잔액 직접 적기</label>
           <input type="text" class="figure" id="b${x.index}" inputmode="numeric" placeholder="${x.잔액}"></div>
-          <button class="btn ghost" data-a="man">이 잔액으로</button></div>`;
+          <button class="btn ghost" data-a="man">이 잔액으로</button></div></details>`;
         w.querySelector('[data-a=fix]').onclick = () => 잔액고치기(x.index, x.기대잔액);
         w.querySelector('[data-a=man]').onclick = () => {
           const v = parseInt(w.querySelector(`#b${x.index}`).value.replace(/[^\d]/g,''),10);
@@ -666,11 +713,11 @@ async function renderSettlement(){
   if(!완료) return;
 
   $('months').innerHTML = r.월별.map(m =>
-    `<tr><td>${m.월}월</td><td>${num(m.수입액)}</td><td>${num(m.집행액)}</td><td>${num(m.잔액)}</td></tr>`).join('') +
-    `<tr class="total"><td>합계</td><td>${num(r.합계.수입액)}</td><td>${num(r.합계.집행액)}</td><td class="none"></td></tr>`;
+    `<tr><td>${m.월}월</td><td data-label="수입액">${num(m.수입액)}</td><td data-label="집행액">${num(m.집행액)}</td><td data-label="잔액">${num(m.잔액)}</td></tr>`).join('') +
+    `<tr class="total"><td>합계</td><td data-label="수입액">${num(r.합계.수입액)}</td><td data-label="집행액">${num(r.합계.집행액)}</td><td class="none"></td></tr>`;
   const t = r.총괄;
   $('summary').innerHTML =
-    `<tr><td>${통장이름[account]}</td><td>${num(t.예산액)}</td><td>${num(t.집행액)}</td><td>${num(t.집행잔액)}</td><td>${num(t.이자)}</td></tr>`;
+    `<tr><td>${통장이름[account]}</td><td data-label="예산액">${num(t.예산액)}</td><td data-label="집행액">${num(t.집행액)}</td><td data-label="집행잔액">${num(t.집행잔액)}</td><td data-label="이자">${num(t.이자)}</td></tr>`;
 
   const c = r.검산, 메모 = [];
   메모.push(`검산: 시작 잔액 ${won(c.시작잔액)} + 수입 ${won(r.합계.수입액)} − 집행 ${won(r.합계.집행액)} = 통장 잔액 ${won(c.통장잔액)}`);
