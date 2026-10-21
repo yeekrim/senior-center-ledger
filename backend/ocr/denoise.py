@@ -41,6 +41,9 @@ _RULE_AS_LAST_DIGIT = re.compile(r"(?<![\d,])(₩?\d{1,3}(?:,\d{3})+)\d(?![\d,])
 # 날짜 뒤 칸막이선 조각을 걷어내고, 띄어 읽힌 적요('40 정')를 붙인다. 안 그러면 칸이 한 칸씩 밀려 줄을 버린다.
 _SPLIT_MEMO_CODE = re.compile(r"^(\d{8})\s*[|/)\]}(\[{!]*\s*(\d{2})\s*([가-힣])")
 
+# 적요 자리('#0정')의 기호는 ₩가 아니다. ₩로 바꾸면 금액으로 떼어져 칸이 밀린다.
+_MEMO_CODE_WON = re.compile(r"^(\d{8} )₩(?=\d[가-힣](\s|$))")
+
 
 def _plausible_date(d: str) -> bool:
     return d.startswith("20") and "01" <= d[4:6] <= "12" and "01" <= d[6:8] <= "31"
@@ -88,10 +91,11 @@ def normalize_line(line: str) -> str:
     line = _normalize_date_prefix(line)
     line = _SPLIT_MEMO_CODE.sub(r"\1 \2\3", line)
     line = _CURRENCY_CONFUSABLE.sub("₩", line)
+    line = _MEMO_CODE_WON.sub(r"\1#", line)
     line = _NUMBER_SPACE.sub(",", line)
     line = _fix_amount_chars(line)
-    line = _RULE_AS_LAST_DIGIT.sub(r"\1", line)
     line = _FOUR_DIGIT_GROUP.sub(r"₩\1", line)
+    line = _RULE_AS_LAST_DIGIT.sub(r"\1", line)   # ₩를 숫자로 읽은 앞자리를 먼저 고쳐야 쉼표 묶음이 보인다
     return line
 
 
