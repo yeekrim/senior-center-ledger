@@ -28,7 +28,14 @@ def is_amount(token: str) -> bool:
     return bool(AMOUNT_RE.match(token))
 
 
+# 금액 끝에 붙은 칸막이선 · 괄호('₩6,000|', '₩8,500(주)'). 떼지 않으면 금액으로 보지 않아 줄을 버린다.
+_STRAY_RULE = re.compile(r"(?<=\d)[|)\]](?=\s|$)")
+_PUNCT_AFTER = re.compile(r"(₩[\d,.]+원?)(?=[(\[|)\]])")
+
+
 def tokenize(line: str):
+    line = _STRAY_RULE.sub("", line)
+    line = _PUNCT_AFTER.sub(r"\1 ", line)
     line = _GLUE_AFTER.sub(r"\1 ", line)
     line = _GLUE_BEFORE.sub(" ", line)
     return line.split()
@@ -39,6 +46,8 @@ def parse_line(line: str):
     tokens = tokenize(line)
     if len(tokens) < 4 or not DATE_RE.match(tokens[0]):
         return None  # 날짜로 시작하지 않으면 거래 행이 아님 (통장 안내문 등)
+    if is_amount(tokens[-1]) and ("₩" in tokens[-1] or "," in tokens[-1]):
+        tokens.append("")                 # 끝이 잔액이면 거래점 칸이 비었다(거래점은 '48000'처럼 쉼표가 없다)
 
     date, 적요 = tokens[0], tokens[1]
     잔액, 거래점 = tokens[-2], tokens[-1]
