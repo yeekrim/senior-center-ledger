@@ -8,6 +8,8 @@ fixture(이상적인 텍스트)와 달리 실제 엔진 출력에는 규칙적�
   0을 O/D로   '00O', '0DO', '59O,940'
   줄번호 붙음  통장 왼쪽 여백의 행번호가 날짜에 달라붙음: '120260530', '15 202606081'
   ₩가 8로     '₩778,000' -> '8778, 000' (첫 쉼표 앞이 4자리가 되어 식별 가능)
+  적요 띄어짐  '40 정', '/ 40정' — 날짜와 적요 사이에 칸막이선 조각이 끼거나 띄어 읽힌다
+  칸막이선     오른쪽 정렬된 잔액 끝에 세로선이 숫자로 붙는다: '₩2,418,6501'
 
 여기서 고치는 것은 '기계적으로 확실한' 잡음뿐이다. 'S'를 6으로 읽는 식의
 모호한 오독은 손대지 않고 남겨서, 잔액 연쇄검증이 사람에게 넘기도록 한다.
@@ -32,6 +34,12 @@ _CHAR_TO_DIGIT = str.maketrans({"O": "0", "o": "0", "D": "0", "I": "1", "l": "1"
 
 # 첫 쉼표 앞이 4자리인 수는 자릿수 규칙에 어긋난다 -> 맨 앞 글자는 ₩ 오독이다.
 _FOUR_DIGIT_GROUP = re.compile(r"(?<![\d,₩])\d(\d{3},\d{3})")
+
+# 마지막 쉼표 뒤가 4자리인 수도 자릿수 규칙에 어긋난다 -> 맨 끝 숫자는 오른쪽 칸막이선이다.
+_RULE_AS_LAST_DIGIT = re.compile(r"(?<![\d,])(₩?\d{1,3}(?:,\d{3})+)\d(?![\d,])")
+
+# 날짜 뒤 칸막이선 조각을 걷어내고, 띄어 읽힌 적요('40 정')를 붙인다. 안 그러면 칸이 한 칸씩 밀려 줄을 버린다.
+_SPLIT_MEMO_CODE = re.compile(r"^(\d{8})\s*[|/)\]}(\[{!]*\s*(\d{2})\s*([가-힣])")
 
 
 def _plausible_date(d: str) -> bool:
@@ -78,9 +86,11 @@ def _fix_amount_chars(line: str) -> str:
 
 def normalize_line(line: str) -> str:
     line = _normalize_date_prefix(line)
+    line = _SPLIT_MEMO_CODE.sub(r"\1 \2\3", line)
     line = _CURRENCY_CONFUSABLE.sub("₩", line)
     line = _NUMBER_SPACE.sub(",", line)
     line = _fix_amount_chars(line)
+    line = _RULE_AS_LAST_DIGIT.sub(r"\1", line)
     line = _FOUR_DIGIT_GROUP.sub(r"₩\1", line)
     return line
 
