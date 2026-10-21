@@ -88,3 +88,49 @@ def test_settlement_rejects_decision_on_non_pending_row():
             "결정": {"0": "수입"}}        # 0번은 보조금 입금이다
     r = client.post("/api/settlement", json=body)
     assert r.status_code == 400
+
+
+def _wait_job(job_id, seconds=10):
+    import time
+    deadline = time.time() + seconds
+    while time.time() < deadline:
+        job = client.get(f"/api/jobs/{job_id}").json()
+        if job["상태"] in ("완료", "실패"):
+            return job
+        time.sleep(0.05)
+    raise AssertionError("작업이 끝나지 않았습니다")
+
+
+def test_job_reports_progress_and_result():
+    files = [("files", ("a.jpg", b"page-a", "image/jpeg")), ("files", ("b.jpg", b"page-b", "image/jpeg"))]
+    r = client.post("/api/jobs", files=files, data={"engine": "mock"})
+    assert r.status_code == 202
+    assert r.json()["전체"] == 2
+    job = _wait_job(r.json()["id"])
+    assert job["상태"] == "완료" and job["읽음"] == 2
+    assert job["결과"]["items"]
+    assert len(job["결과"]["사진"]) == 2
+
+
+def test_job_reuses_same_photo():
+    files = [("files", ("a.jpg", b"same-photo", "image/jpeg"))]
+    first = _wait_job(client.post("/api/jobs", files=files, data={"engine": "mock"}).json()["id"])
+    again = _wait_job(client.post("/api/jobs", files=files, data={"engine": "mock"}).json()["id"])
+    assert again["사진"][0]["재사용"] is True
+    assert again["결과"]["items"] == first["결과"]["items"]
+
+
+def test_unknown_job_is_404():
+    assert client.get("/api/jobs/nope").status_code == 404
+
+
+def test_job_rejects_unknown_engine():
+    files = [("files", ("a.jpg", b"x", "image/jpeg"))]
+    assert client.post("/api/jobs", files=files, data={"engine": "nope"}).status_code == 400
+
+
+def test_accounts_come_from_one_place():
+    from passbook.classify import ACCOUNTS
+    body = client.get("/api/accounts").json()
+    assert [a["id"] for a in body] == list(ACCOUNTS)
+    assert all(a["이름"] for a in body)

@@ -1,6 +1,7 @@
 """reconstruct.py — 낱개 토큰을 원래 줄로 복원.
 
 약속: y가 가까운 토큰끼리 같은 줄로 묶고, 줄 안에서는 x 순으로 정렬한다.
+날짜가 둘 이상 보이면 날짜마다 거래 한 줄이고, 줄 간격이 촘촘해도 거래끼리 합쳐지지 않는다.
 """
 
 from ocr.reconstruct import fields_to_lines
@@ -56,6 +57,57 @@ def test_허용치는_글자_크기에_비례한다():
     large = [field("가", 0, 100, h=60), field("나", 100, 125, h=60)]
     assert len(lines_of(small)) == 2
     assert len(lines_of(large)) == 1
+
+
+def row(date, y, drop=0, x0=0, h=20):
+    """통장 거래 한 줄: 날짜 · 적요 · 금액 · 내역 · 잔액 · 거래점. drop은 칸마다 내려가는 y(기울기)."""
+    texts = [date, "40정", "₩3,000", "가나상회", "₩1,000,000", "45000"]
+    return [field(t, x0 + i * 120, y + i * drop, w=100, h=h) for i, t in enumerate(texts)]
+
+
+def test_기울어진_촘촘한_줄도_거래마다_나뉜다():
+    # 이 방식의 존재 이유. 줄 간격이 촘촘한 통장이 조금만 기울어도, 한 줄의 오른쪽 끝 토큰과
+    # 다음 줄의 왼쪽 토큰이 y로 가까워져 '직전 토큰과 가까우면 같은 줄'로는 거래가 합쳐진다.
+    fields = row("20260511", 100, drop=3) + row("20260512", 124, drop=3) + row("20260513", 148, drop=3)
+    lines = lines_of(fields)
+    assert lines == [
+        "20260511 40정 ₩3,000 가나상회 ₩1,000,000 45000",
+        "20260512 40정 ₩3,000 가나상회 ₩1,000,000 45000",
+        "20260513 40정 ₩3,000 가나상회 ₩1,000,000 45000",
+    ]
+
+
+def test_접힌_위아래_페이지가_서로_다르게_기울어도_나뉜다():
+    top = [f for i, y in enumerate((100, 124, 148)) for f in row(f"2026050{i + 1}", y, drop=3)]
+    bottom = [f for i, y in enumerate((300, 324, 348)) for f in row(f"2026060{i + 1}", y, drop=-3)]
+    lines = lines_of(top + bottom)
+    assert [l.split()[0] for l in lines] == [
+        "20260501", "20260502", "20260503", "20260601", "20260602", "20260603"]
+    assert all(len(l.split()) == 6 for l in lines)
+
+
+def test_날짜_없는_머리글과_안내문은_제자리에_따로_남는다():
+    fields = ([field("년월일", 0, 40), field("잔액", 480, 40)]
+              + row("20260511", 100) + row("20260512", 124)
+              + [field("사람이", 0, 200), field("신협", 120, 200)])
+    assert lines_of(fields) == [
+        "년월일 잔액",
+        "20260511 40정 ₩3,000 가나상회 ₩1,000,000 45000",
+        "20260512 40정 ₩3,000 가나상회 ₩1,000,000 45000",
+        "사람이 신협",
+    ]
+
+
+def test_행번호가_붙거나_0을_O로_읽은_날짜도_기준점이_된다():
+    fields = row("1220260511", 100) + row("2026O512", 124)
+    assert [l.split()[0] for l in lines_of(fields)] == ["1220260511", "2026O512"]
+
+
+def test_내역_칸의_날짜는_기준점으로_쓰지_않는다():
+    # 내역에 날짜처럼 생긴 숫자가 있어도 그 자리에서 새 줄을 시작하지 않는다.
+    fields = row("20260511", 100) + row("20260512", 124) + [field("20260101", 360, 112)]
+    lines = lines_of(fields)
+    assert len(lines) == 2
 
 
 def test_빈_입력():

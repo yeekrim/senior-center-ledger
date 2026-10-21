@@ -43,6 +43,22 @@ BORDER_SAMPLE_RATIO = 0.04   # 배경색을 추정할 때 쓰는 테두리 두�
 LAB_DISTANCE_MIN = 12        # 배경색과 '다르다'고 볼 최소 색차 (Lab, 8비트 척도)
 
 
+def shrink(image_bytes: bytes, long_side: int) -> bytes:
+    """EXIF 회전을 적용하고 긴 변이 long_side를 넘지 않게 줄인다(메모리 안에서만).
+
+    휴대폰 원본(4032px)을 그대로 OCR하면 CPU에서 사진 한 장에 70초 남짓 걸린다.
+    실사진으로 잰 결과 1400px로 줄이면 8초 안팎으로 빨라진다. 다만 사진에 따라 거래를
+    놓치기도 해서, 다시 읽을지는 reading.py가 정한다. 회전을 먼저 적용하는 것이 중요하다 — 빠뜨리면
+    통장이 옆으로 누운 채 OCR에 들어가 거래를 한 줄도 읽지 못한다.
+    """
+    pil = ImageOps.exif_transpose(Image.open(io.BytesIO(image_bytes))).convert("RGB")
+    if max(pil.size) > long_side:
+        pil.thumbnail((long_side, long_side), Image.LANCZOS)
+    buf = io.BytesIO()
+    pil.save(buf, format="JPEG", quality=92)
+    return buf.getvalue()
+
+
 def _load_bgr(image_bytes: bytes) -> np.ndarray:
     """EXIF 회전을 반영해 디코딩한다."""
     pil = ImageOps.exif_transpose(Image.open(io.BytesIO(image_bytes))).convert("RGB")
