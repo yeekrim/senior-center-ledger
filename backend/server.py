@@ -14,8 +14,8 @@
   GET  /api/jobs/{id} 작업 진행 상황(몇 장 읽었는지)과 끝나면 검토 결과
   POST /api/settlement  검토를 마친 거래로 정산보고서 칸에 들어갈 값을 계산한다
 
-POST는 사진을 메모리에서만 다룬다. run_ocr_pipeline이 봉투암호화→복호화→OCR을
-거치며 평문 이미지를 디스크에 쓰지 않고, 이 서버도 업로드 바이트를 저장하지 않는다.
+POST는 사진을 메모리에서만 다룬다. run_ocr_pipeline이 사진을 디스크에 쓰지 않고,
+이 서버도 업로드 바이트를 저장하지 않는다.
 """
 
 import logging
