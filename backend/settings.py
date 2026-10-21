@@ -7,6 +7,7 @@
   LEDGER_RETRY_BELOW          잔액이 맞은 이음매 비율이 이보다 낮으면 다음 크기로 다시 읽는다. 기본 0.5
   LEDGER_PAGE_BUDGET_SECONDS  사진 한 장의 목표 시간. 넘으면 경고 로그. 기본 15
   LEDGER_PRELOAD_OCR          0이면 서버를 켤 때 OCR 모델을 미리 불러오지 않는다. 기본 1
+  LEDGER_GPU_SIZES            GPU(M1 · CUDA)로 읽을 크기. READ_SIZES와 같은 형식, 비우면 GPU를 쓰지 않음. 기본 원본
 """
 
 import os
@@ -40,3 +41,5 @@ READ_SIZES = parse_sizes(os.environ.get("LEDGER_READ_SIZES", f"1400,{ORIGINAL}")
 RETRY_BELOW = _ratio("LEDGER_RETRY_BELOW", "0.5")
 PAGE_BUDGET_SECONDS = float(os.environ.get("LEDGER_PAGE_BUDGET_SECONDS", "15"))
 PRELOAD_OCR = os.environ.get("LEDGER_PRELOAD_OCR", "1") != "0"
+_gpu_sizes = os.environ.get("LEDGER_GPU_SIZES", ORIGINAL).strip()
+GPU_SIZES = parse_sizes(_gpu_sizes) if _gpu_sizes else ()

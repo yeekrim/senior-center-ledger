@@ -8,18 +8,18 @@ reconstruct.fields_to_lines()가 이 형식을 받으므로, 파싱 계층은 �
 읽었는지(easyocr / mock) 알 필요가 없다.
 """
 
-_reader = None  # 모델 로딩이 느려서(수 초) 프로세스당 한 번만 만든다
+_readers = {}  # {gpu 여부: 모델}. 모델 로딩이 느려서(수 초) 프로세스당 한 번만 만든다
 
 
-def _get_reader():
-    global _reader
-    if _reader is None:
+def _get_reader(gpu: bool = False):
+    if gpu not in _readers:
         import easyocr
-        _reader = easyocr.Reader(["ko", "en"], gpu=False, verbose=False)
-    return _reader
+        # GPU가 없으면 easyocr가 경고만 남기고 CPU로 읽는다.
+        _readers[gpu] = easyocr.Reader(["ko", "en"], gpu=gpu, verbose=False)
+    return _readers[gpu]
 
 
-def warm_up() -> bool:
+def warm_up(gpu: bool = False) -> bool:
     """서버를 켤 때 모델을 미리 불러 둔다. 첫 사진에서 모델 로딩(수 초)을 기다리지 않게.
 
     easyocr가 설치되어 있지 않은 환경(mock으로만 쓰는 데모 · 테스트)에서는 아무것도
@@ -27,14 +27,16 @@ def warm_up() -> bool:
     """
     try:
         _get_reader()
+        if gpu:
+            _get_reader(gpu=True)
     except ImportError:
         return False
     return True
 
 
-def call_easyocr(image_bytes: bytes) -> dict:
+def call_easyocr(image_bytes: bytes, gpu: bool = False) -> dict:
     """이미지 바이트를 로컬 EasyOCR로 인식해 fields/boundingPoly 형식 dict로 반환한다."""
-    results = _get_reader().readtext(image_bytes)
+    results = _get_reader(gpu).readtext(image_bytes)
 
     fields = []
     for bbox, text, _confidence in results:

@@ -32,7 +32,7 @@ from ocr.easyocr_client import warm_up
 import jobs
 from ocr.pipeline import ENGINES
 from reading import read_page
-from settings import PRELOAD_OCR
+from settings import GPU_SIZES, PRELOAD_OCR
 from passbook.pages import infer_opening, merge_pages
 from passbook.review import review_transactions
 from passbook.classify import ACCOUNTS
@@ -53,7 +53,7 @@ async def lifespan(_app):
     """서버를 켤 때 OCR 모델을 미리 불러 둔다. LEDGER_PRELOAD_OCR=0이면 건너뛴다(settings.py)."""
     if PRELOAD_OCR:
         started = time.perf_counter()
-        loaded = warm_up()
+        loaded = warm_up(gpu=bool(GPU_SIZES))
         log.info("OCR 모델 미리 불러오기: %s (%.1f초)",
                  "완료" if loaded else "easyocr 없음, 건너뜀", time.perf_counter() - started)
     yield

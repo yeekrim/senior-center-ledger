@@ -6,7 +6,7 @@ fixture 텍스트를 돌려준다. 모델 없이 파이프라인 전체(암호�
 """
 
 
-def call_mock_ocr(image_bytes: bytes) -> dict:
+def call_mock_ocr(image_bytes: bytes, gpu: bool = False) -> dict:
     """실제 이미지 바이트는 읽지 않고, fixture 줄을 토큰 단위 필드와 좌표로 재구성해 돌려준다."""
     from data.sample_lines import SAMPLE_LINES
 

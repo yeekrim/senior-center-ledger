@@ -18,6 +18,7 @@ from .easyocr_client import call_easyocr
 from .mock_client import call_mock_ocr
 from .preprocess import crop_document, shrink
 from .reconstruct import fields_to_lines
+from settings import GPU_SIZES
 
 ENGINES = {
     "easyocr": call_easyocr,
@@ -70,7 +71,9 @@ def run_ocr_pipeline(image_bytes: bytes, engine: str = "easyocr",
             timings["축소"] = clock() - started
         # 4) OCR 인식 (이 기기 안에서만)
         started = clock()
-        ocr_response = ENGINES[engine](plaintext)
+        # 큰 크기만 GPU로 읽는다. 실사진 6장을 원본으로 읽으면 CPU와 줄 텍스트가 똑같았고, 다시 읽는 사진은
+        # 38초 -> 12초였다(6장을 연달아 원본으로 읽으면 30~40%). 1400px는 사진 1장 측정에서 GPU가 더 느렸다.
+        ocr_response = ENGINES[engine](plaintext, gpu=long_side in GPU_SIZES)
         timings["OCR"] = clock() - started
     finally:
         # 5) 평문 즉시 폐기(디스크 기록 없음, 참조만 제거).
