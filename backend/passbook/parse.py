@@ -20,6 +20,7 @@
 
 from .normalize import to_amount
 
+# 신협 통장의 결산 이자 표기. 다른 은행 통장을 다루면 그 은행의 표기를 확인해 바꾼다.
 INTEREST_KEYWORD = "결산이자"
 
 

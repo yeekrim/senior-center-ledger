@@ -23,11 +23,13 @@ SUBSIDY = "보조금"
 INTEREST = "이자"
 PENDING = "미정"
 
-# 통장(보고서의 구분) -> 그 통장 보조금 입금에 들어가는 항목 이름
+# 통장(보고서의 구분). 통장 종류는 여기서만 정한다 — 화면도 /api/accounts로 이 목록을 받는다.
+#   이름: 정산보고서의 '구분' 칸에 적힌 이름
+#   항목: 그 통장 보조금 입금의 사용내역에 들어가는 항목 이름
 ACCOUNTS = {
-    "운영비": ("운영비",),
-    "부식비": ("부식비",),
-    "냉난방비": ("냉난방비", "양곡비"),
+    "운영비": {"이름": "운영비 (난방비 포함)", "항목": ("운영비",)},
+    "부식비": {"이름": "부식비", "항목": ("부식비",)},
+    "냉난방비": {"이름": "냉난방비 · 양곡비 (국비)", "항목": ("냉난방비", "양곡비")},
 }
 
 # 분기 숫자는 요구하지 않는다. 실사진 OCR에서 '3분기'가 '40정분기'처럼 숫자를 잃고
@@ -49,6 +51,6 @@ def classify_deposit(row, account: str) -> str:
     memo = _memo(row)
     if INTEREST_KEYWORD in memo:
         return INTEREST
-    if QUARTER in memo and any(name in memo for name in ACCOUNTS[account]):
+    if QUARTER in memo and any(name in memo for name in ACCOUNTS[account]["항목"]):
         return SUBSIDY
     return PENDING

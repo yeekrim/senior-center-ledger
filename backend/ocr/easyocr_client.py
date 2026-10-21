@@ -19,6 +19,19 @@ def _get_reader():
     return _reader
 
 
+def warm_up() -> bool:
+    """서버를 켤 때 모델을 미리 불러 둔다. 첫 사진에서 모델 로딩(수 초)을 기다리지 않게.
+
+    easyocr가 설치되어 있지 않은 환경(mock으로만 쓰는 데모 · 테스트)에서는 아무것도
+    하지 않고 False를 돌려준다. 그때는 첫 OCR 요청에서 원래대로 오류가 난다.
+    """
+    try:
+        _get_reader()
+    except ImportError:
+        return False
+    return True
+
+
 def call_easyocr(image_bytes: bytes) -> dict:
     """이미지 바이트를 로컬 EasyOCR로 인식해 fields/boundingPoly 형식 dict로 반환한다."""
     results = _get_reader().readtext(image_bytes)
