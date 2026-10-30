@@ -13,6 +13,7 @@
   POST /api/jobs      위와 같은 일을 백그라운드 작업으로 맡기고 작업 번호를 바로 받는다
   GET  /api/jobs/{id} 작업 진행 상황(몇 장 읽었는지)과 끝나면 검토 결과
   POST /api/settlement  검토를 마친 거래로 정산보고서 칸에 들어갈 값을 계산한다
+  POST /api/recheck     사람이 고친 거래 목록을 다시 판정한다(판정 규칙은 passbook/review.py 한 곳)
 
 POST는 사진을 메모리에서만 다룬다. run_ocr_pipeline이 사진을 디스크에 쓰지 않고,
 이 서버도 업로드 바이트를 저장하지 않는다.
@@ -162,16 +163,36 @@ class SettlementRequest(BaseModel):
     시작잔액: int | None = None
 
 
+def _passbook_rows(items):
+    """화면의 item(입금/지출)을 passbook 모듈이 쓰는 통장 칸 이름(맡기신/찾으신금액)으로 바꾼다."""
+    return [{"date": item.date, "적요": item.적요, "사용내역": item.사용내역,
+             "맡기신금액": item.입금 or None, "찾으신금액": item.지출 or None,
+             "잔액": item.잔액}
+            for item in items]
+
+
 @app.post("/api/settlement")
 def settlement(req: SettlementRequest):
     """통장 하나의 반기 정산값. 미정 입금은 '결정'에 인덱스별로 '수입' 또는 '차감'을 준다."""
-    rows = [{"date": item.date, "적요": item.적요, "사용내역": item.사용내역,
-             "맡기신금액": item.입금 or None, "찾으신금액": item.지출 or None,
-             "잔액": item.잔액}
-            for item in req.items]
+    rows = _passbook_rows(req.items)
     try:
         result = settle(rows, req.통장, req.연도, req.반기,
                         opening_balance=req.시작잔액, decisions=req.결정)
     except ValueError as e:
         raise HTTPException(400, str(e))
     return JSONResponse(result)
+
+
+class RecheckRequest(BaseModel):
+    """확인 화면이 고친 거래 목록. 확인함: '통장에 찍힌 값이 맞다'고 한 행 번호."""
+    items: list[SettlementItem]
+    시작잔액: int = 0
+    확인함: list[int] = []
+
+
+@app.post("/api/recheck")
+def recheck(req: RecheckRequest):
+    """사람이 고친 뒤 다시 판정한다. 화면이 같은 규칙을 따로 갖지 않도록 서버에서만 판정한다."""
+    return JSONResponse(review_transactions(_passbook_rows(req.items),
+                                            opening_balance=req.시작잔액,
+                                            confirmed=req.확인함))

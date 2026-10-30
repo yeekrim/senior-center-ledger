@@ -7,8 +7,8 @@
 from data.real_ocr_lines import REAL_OCR_LINES
 from ocr.denoise import normalize_lines
 from passbook.lines import parse_lines
-from passbook.review import (BALANCE_MISREAD, MISSING_ROW, OK, UNKNOWN,
-                             review_transactions)
+from passbook.review import (BALANCE_MISREAD, CONFIRMED, MISSING_ROW, OK,
+                             UNKNOWN, review_transactions)
 
 
 def row(date, 입금=None, 지출=None, 잔액=None, 내역=""):
@@ -80,10 +80,31 @@ def test_실사진_회귀():
     result = review_transactions(rows, opening_balance=0)
 
     assert result["summary"] == {"전체": 18, OK: 16, BALANCE_MISREAD: 1,
-                                 MISSING_ROW: 1, UNKNOWN: 0}
+                                 MISSING_ROW: 1, UNKNOWN: 0, CONFIRMED: 0}
 
     누락 = next(i for i in result["items"] if i["상태"] == MISSING_ROW)
     assert 누락["제안"]["제안값"] == 12000      # 인식 실패한 ₩12,000 한창건어물
 
     오독 = next(i for i in result["items"] if i["상태"] == BALANCE_MISREAD)
     assert 오독["제안"]["제안값"] == 564940     # 통장에 실제로 찍힌 잔액
+
+
+def test_사람이_맞다고_한_행은_확인함():
+    """'통장에 찍힌 값이 맞다'고 하면 제안을 거두고, 찍힌 잔액을 다음 행에 물려준다."""
+    rows = [row("20260101", 입금="1,000", 잔액="1,000"),
+            row("20260102", 지출="300", 잔액="70"),
+            row("20260103", 지출="200", 잔액="500")]
+    result = review_transactions(rows, opening_balance=0, confirmed=[1])
+    items = result["items"]
+    assert items[1]["상태"] == CONFIRMED
+    assert "제안" not in items[1]
+    # 사람 말대로 70을 물려주면 다음 행이 안 맞는다. 바로잡은 값(700)으로 덮어쓰지 않는다.
+    assert items[2]["이전잔액"] == 70
+    assert items[2]["상태"] != OK
+    assert result["summary"][CONFIRMED] == 1
+
+
+def test_맞는_행은_확인함이_되지_않는다():
+    rows = [row("20260101", 입금="1,000", 잔액="1,000")]
+    items = review_transactions(rows, opening_balance=0, confirmed=[0])["items"]
+    assert items[0]["상태"] == OK
