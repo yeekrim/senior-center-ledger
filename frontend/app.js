@@ -373,7 +373,7 @@ async function render(){
       w.className = 'fix';
       const 방향 = x.지출 ? '지출' : '입금', 이전 = x.기대잔액 - x.입금 + x.지출;
       w.innerHTML = `<div class="manual"><div><label for="m${x.index}">이 거래의 가게 이름을 적어 주세요</label>
-        <input type="text" id="m${x.index}" placeholder="예: 한창건어물"></div></div>
+        <input type="text" id="m${x.index}" placeholder="예: 바다건어물"></div></div>
         <details class="more"><summary>빠진 거래가 여러 건이에요</summary>
         <p class="why">통장에 찍힌 첫 거래의 ${방향} 금액을 적어 주세요. 남은 금액은 아래 줄에서 다시 여쭤볼게요.</p>
         <div class="manual"><div><label for="n${x.index}">${방향} 금액</label>

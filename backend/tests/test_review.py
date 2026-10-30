@@ -4,7 +4,7 @@
 사람이 고칠 수 있는 구체적인 값을 제시한다. 모르면 모른다고 한다.
 """
 
-from data.real_ocr_lines import REAL_OCR_LINES
+from data.noisy_ocr_lines import NOISY_OCR_LINES
 from ocr.denoise import normalize_lines
 from passbook.lines import parse_lines
 from passbook.review import (BALANCE_MISREAD, CONFIRMED, MISSING_ROW, OK,
@@ -13,7 +13,7 @@ from passbook.review import (BALANCE_MISREAD, CONFIRMED, MISSING_ROW, OK,
 
 def row(date, 입금=None, 지출=None, 잔액=None, 내역=""):
     return {"date": date, "적요": "40정", "맡기신금액": 입금, "찾으신금액": 지출,
-            "사용내역": 내역, "잔액": 잔액, "거래점": "45000"}
+            "사용내역": 내역, "잔액": 잔액, "거래점": "36000"}
 
 
 def test_전부_맞으면_정상():
@@ -74,19 +74,19 @@ def test_마지막_행_오류는_단정하지_않는다():
     assert items[1]["제안"]["제안값"] is None
 
 
-def test_실사진_회귀():
-    """실통장 18건 중 사람이 볼 곳은 2건, 나머지는 정상이어야 한다."""
-    rows = parse_lines(normalize_lines(REAL_OCR_LINES))
+def test_잡음_섞인_통장_회귀():
+    """잡음 섞인 통장 18건 중 사람이 볼 곳은 2건, 나머지는 정상이어야 한다."""
+    rows = parse_lines(normalize_lines(NOISY_OCR_LINES))
     result = review_transactions(rows, opening_balance=0)
 
     assert result["summary"] == {"전체": 18, OK: 16, BALANCE_MISREAD: 1,
                                  MISSING_ROW: 1, UNKNOWN: 0, CONFIRMED: 0}
 
     누락 = next(i for i in result["items"] if i["상태"] == MISSING_ROW)
-    assert 누락["제안"]["제안값"] == 12000      # 인식 실패한 ₩12,000 한창건어물
+    assert 누락["제안"]["제안값"] == 15000      # 인식 실패한 ₩15,000 바다건어물
 
     오독 = next(i for i in result["items"] if i["상태"] == BALANCE_MISREAD)
-    assert 오독["제안"]["제안값"] == 564940     # 통장에 실제로 찍힌 잔액
+    assert 오독["제안"]["제안값"] == 438660     # 통장에 실제로 찍힌 잔액
 
 
 def test_사람이_맞다고_한_행은_확인함():

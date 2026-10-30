@@ -5,7 +5,7 @@
 
 반환 형식:
   {"MM": [총입금, 총지출, 총이자], ...}
-  예) {"03": [849000, 0, 0], "05": [0, 218700, 0], "06": [856800, 91800, 21]}
+  예) {"03": [736000, 0, 0], "05": [0, 252340, 0], "06": [742900, 81320, 17]}
 """
 
 
@@ -31,7 +31,7 @@ def monthly_totals(입금, 지출, 이자):
     current_입금 = current_지출 = current_이자 = 0
 
     for date, kind, amount in _timeline(입금, 지출, 이자):
-        month = date[4:6]                      # '20260530' -> '05'
+        month = date[4:6]                      # '20260521' -> '05'
 
         if current_month is None:
             current_month = month
