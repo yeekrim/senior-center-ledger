@@ -3,8 +3,7 @@
 실행:  uvicorn server:app --reload   (backend 폴더 안에서)
 그리고 브라우저에서 http://127.0.0.1:8000 을 연다.
 
-지금까지 화면은 export_review.py가 index.html에 직접 써 넣은 JSON으로만 돌아갔다.
-이 서버가 붙으면 화면이 서버에서 같은 모양의 JSON을 받아온다:
+화면(frontend/index.html)은 아래 API에서 데이터를 받는다. 판정과 정산은 서버에서만 한다:
 
   GET  /              프론트엔드(frontend/index.html)
   GET  /api/accounts  통장 종류(운영비 · 부식비 · 냉난방비)와 보고서에 적는 이름
@@ -28,7 +27,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
-from export_review import build_review
+from data.demo import build_review
 from ocr.easyocr_client import warm_up
 import jobs
 from ocr.pipeline import ENGINES
