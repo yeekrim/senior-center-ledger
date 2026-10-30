@@ -814,7 +814,11 @@ async function render(){
 
 $('goFirst').onclick = () => {
   const el = document.querySelector('.row.flag');
-  if(el) el.scrollIntoView({behavior: REDUCED?'auto':'smooth', block:'center'});
+  if(!el) return;
+  // 화면만 옮기면 키보드 · 화면 읽기로 쓰는 분은 그 줄까지 다시 찾아가야 하므로 초점도 옮긴다.
+  // 스크롤은 아래 scrollIntoView가 맡도록 focus는 스크롤하지 않게 한다.
+  el.querySelector('.rowline').focus({preventScroll:true});
+  el.scrollIntoView({behavior: REDUCED?'auto':'smooth', block:'center'});
 };
 $('undo').onclick = () => {
   if(!history.length) return;
