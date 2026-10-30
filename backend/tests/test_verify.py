@@ -14,16 +14,16 @@ def rows():
     return parse_lines(SAMPLE_LINES)
 
 
-def test_실통장_전건_일치(rows):
+def test_통장_전건_일치(rows):
     result = verify_balance_chain(rows, opening_balance=0)
     assert result["ok"]
     assert result["checked"] == len(rows)
 
 
 def test_숫자_오독_검출(rows):
-    # OCR이 71,000을 71,800으로 잘못 읽은 상황 (0 -> 8 오독)
+    # OCR이 64,000을 64,800으로 잘못 읽은 상황 (0 -> 8 오독)
     bad = copy.deepcopy(rows)
-    bad[1]["찾으신금액"] = "₩71,800"
+    bad[1]["찾으신금액"] = "₩64,800"
     result = verify_balance_chain(bad, opening_balance=0)
     assert not result["ok"]
     first = result["errors"][0]
@@ -39,7 +39,7 @@ def test_입출금_뒤집힘_검출(rows):
     target["찾으신금액"], target["맡기신금액"] = None, amount
     result = verify_balance_chain(bad, opening_balance=0)
     assert not result["ok"]
-    assert result["errors"][0]["차이"] == -2 * 71000
+    assert result["errors"][0]["차이"] == -2 * 64000
 
 
 def test_빈_입력():

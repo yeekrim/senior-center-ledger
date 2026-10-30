@@ -18,9 +18,9 @@ def rows():
 
 
 def test_시작잔액은_첫행_거래를_되돌려_구한다(rows):
-    # 첫 거래는 입금 849,000 / 잔액 849,000 -> 그 전 잔액은 0
+    # 첫 거래는 입금 736,000 / 잔액 736,000 -> 그 전 잔액은 0
     assert page_opening(rows) == 0
-    assert page_closing(rows) == 1381321
+    assert page_closing(rows) == 1145257
 
 
 def test_순서대로_준_페이지(rows):
@@ -54,11 +54,11 @@ def test_겹쳐_찍은_사진의_중복_구간_제거(rows):
 
 
 def test_정상적인_중복_거래는_보존(rows):
-    # 20260610 주식회사 소담 ₩7,800 이 두 건 있다. 겹침 제거가 이걸 지우면 안 된다.
+    # 20260604 주식회사 해솔 ₩6,900 이 두 건 있다. 겹침 제거가 이걸 지우면 안 된다.
     merged, _ = merge_pages([rows[:7], rows[7:13], rows[13:]])
-    소담 = [r for r in merged
-           if r["date"] == "20260610" and r.get("사용내역") == "주식회사 소담"]
-    assert len(소담) == 2
+    해솔 = [r for r in merged
+           if r["date"] == "20260604" and r.get("사용내역") == "주식회사 해솔"]
+    assert len(해솔) == 2
 
 
 def test_잔액이_끊기면_기록에_남는다(rows):
@@ -66,8 +66,8 @@ def test_잔액이_끊기면_기록에_남는다(rows):
     merged, report = merge_pages([rows[:7], rows[13:]])
     assert len(report["gaps"]) == 1
     gap = report["gaps"][0]
-    assert gap["기대시작잔액"] == 630300      # 첫 페이지 끝 잔액
-    assert gap["실제시작잔액"] == 557140      # 마지막 페이지 시작 잔액
+    assert gap["기대시작잔액"] == 513200      # 첫 페이지 끝 잔액
+    assert gap["실제시작잔액"] == 431760      # 마지막 페이지 시작 잔액
     assert len(merged) == 7 + len(rows[13:])  # 있는 것은 버리지 않는다
 
 

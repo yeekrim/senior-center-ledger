@@ -65,8 +65,8 @@ def test_settlement_from_demo_review():
     assert r.status_code == 200
     result = r.json()
     assert [m["월"] for m in result["월별"]] == [1, 2, 3, 4, 5, 6]
-    assert result["총괄"]["예산액"] == 849_000 * 2          # OCR이 '3분기'의 숫자를 잃어도 보조금
-    assert result["총괄"]["이자"] == 21                     # '결산이 자'로 읽혀도 이자
+    assert result["총괄"]["예산액"] == 736_000 * 2          # OCR이 '3분기'의 숫자를 잃어도 보조금
+    assert result["총괄"]["이자"] == 17                     # '결산이 자'로 읽혀도 이자
     assert [p["사용내역"] for p in result["미정"]] == ["취소-주식"]
     # 잔액오독·거래누락을 고치지 않은 데이터이므로 완료가 아니다
     assert result["검산"]["잔액연쇄"] is False
@@ -87,7 +87,7 @@ def test_post_review_infers_opening_balance():
 
 def test_settlement_rejects_item_without_balance():
     body = {"통장": "부식비", "연도": 2026, "반기": "상반기",
-            "items": [{"date": "20260320", "입금": 849000}]}
+            "items": [{"date": "20260312", "입금": 736000}]}
     r = client.post("/api/settlement", json=body)
     assert r.status_code == 422
 

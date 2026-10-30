@@ -2,11 +2,11 @@ from passbook.normalize import to_amount
 
 
 def test_won_sign_and_comma():
-    assert to_amount("₩849,000") == 849000
+    assert to_amount("₩736,000") == 736000
 
 
 def test_dot_and_won_suffix():
-    assert to_amount("849.000원") == 849000
+    assert to_amount("736.000원") == 736000
 
 
 def test_plain_digits():
