@@ -111,7 +111,10 @@ backend/
     classify.py          入金 → 補助金 / 利息 / 未定
     settlement.py        半期の精算値（月別・総括・検算）
   tests/
-frontend/index.html      画面（ビルド不要のファイル1つ）
+frontend/                画面（ビルド不要）
+  index.html             マークアップ
+  app.css                スタイル
+  app.js                 画面の動作（判定・精算はサーバーに問い合わせる）
 ```
 
 ## 制約
