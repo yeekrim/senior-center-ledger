@@ -341,6 +341,7 @@ let rows = [], history = [], shots = [];
 // OPENING: 첫 거래 직전 잔액(서버가 사진에서 구한다). 결정: 미정 입금 인덱스 -> '수입' | '차감'
 let OPENING = 0, 결정 = {};
 let 여는줄 = null;   // 고치기 칸을 연 줄의 번호
+let 초점 = null;     // 다시 그린 뒤 초점을 줄 곳(선택자). 없으면 초점이 있던 줄의 버튼으로 간다
 // 통장 종류와 보고서 이름은 서버(passbook/classify.py)에서만 정한다. 화면은 받아서 그린다.
 let 통장이름 = {};
 
@@ -584,6 +585,7 @@ function 거래넣기(i,차이){
     rows.splice(i,0,{date:뒷날짜, 적요:rows[i].적요, 사용내역:'', 입금:지출?0:금액,
       지출:지출?금액:0, 잔액:지출?이전-금액:이전+금액, 거래점:'', 확인됨:false, 새로추가:true,
       날짜확인:정해짐, 날짜범위:[앞날짜 || 뒷날짜, 뒷날짜]});
+    초점 = `#m${i}`;   // 넣은 거래에서 다음에 할 일은 가게 이름 적기
   });
 }
 // 날짜를 아직 안 고른 새 거래의 날짜는 임시값이라 건너뛴다.
@@ -597,7 +599,7 @@ const 줄넣기 = i => 고치기(() => {
   const 앞 = 앞날짜찾기(i), 뒤 = rows[i] ? rows[i].date : 앞;
   rows.splice(i,0,{date:뒤, 적요:'', 사용내역:'', 입금:0, 지출:0, 잔액:i === 0 ? OPENING : rows[i-1].잔액,
     거래점:'', 확인됨:false, 새로추가:true, 날짜확인:false, 날짜범위:[앞 || 뒤, 뒤]});
-  여는줄 = i;
+  여는줄 = i; 초점 = `#ed${i}`;
 });
 const 줄지우기 = i => 고치기(() => { rows.splice(i,1); 여는줄 = null; });
 const 줄저장 = (i,v) => 고치기(() => { Object.assign(rows[i], v, {날짜확인:true}); 여는줄 = null; });
@@ -659,13 +661,17 @@ function render(){
   $('range').textContent = ds.length ? `${ymd(ds[0])} — ${ymd(ds[ds.length-1])}` : '';
 
   const box = $('rows');
+  // 목록을 통째로 다시 그리면 방금 누른 버튼도 지워져 초점이 맨 위로 간다.
+  // 키보드 · 화면 읽기로 쓰는 분이 제자리를 잃지 않게, 초점이 있던 줄을 기억해 두었다가 되돌린다.
+  const 있던줄 = document.activeElement?.closest('#rows .row')?.dataset.i;
   box.innerHTML = '';
   items.forEach(x => {
     const 문제 = x.상태!=='정상' && x.상태!=='확인함';
     const row = document.createElement('div');
+    row.dataset.i = x.index;
     row.className = 'row' + (문제 || 날짜미정(x) ?' flag':'') + (x.상태==='확인함'?' fixed':'');
     const 열림 = 여는줄 === x.index;
-    row.innerHTML = `<button type="button" class="rowline" aria-expanded="${열림}" aria-controls="e${x.index}">
+    row.innerHTML = `<button type="button" class="rowline" id="r${x.index}" aria-expanded="${열림}" aria-controls="e${x.index}">
       <i class="num">${x.index+1}</i>
       <i class="date">${날짜미정(x) ? '날짜 고르기' : ymd(x.date)}</i>
       <span class="memo" data-amt="${x.지출?'지출':'입금'} ${won(x.지출||x.입금)}">${x.사용내역 || '내역 없음'}</span>
@@ -782,13 +788,23 @@ function render(){
     }
     box.appendChild(row);
   });
+  // 줄을 지워 번호가 끝을 넘으면 마지막 줄로 간다.
+  const 갈곳 = 초점 ? box.querySelector(초점)
+    : 있던줄 !== undefined ? $(`r${Math.min(+있던줄, items.length - 1)}`) : null;
+  초점 = null;
+  if(갈곳) 갈곳.focus();
 }
 
 $('goFirst').onclick = () => {
   const el = document.querySelector('.row.flag');
   if(el) el.scrollIntoView({behavior: REDUCED?'auto':'smooth', block:'center'});
 };
-$('undo').onclick = () => { if(history.length){ rows = history.pop(); 결정 = {}; 여는줄 = null; render(); } };
+$('undo').onclick = () => {
+  if(!history.length) return;
+  rows = history.pop(); 결정 = {}; 여는줄 = null; render();
+  // 더 되돌릴 것이 없으면 버튼이 숨으면서 초점을 잃으므로 첫 확인할 곳(없으면 첫 줄)으로 옮긴다.
+  if($('undo').hidden) (document.querySelector('#rows .row.flag .rowline') || $('r0'))?.focus();
+};
 $('toMonths').onclick = () => { show('months'); renderSettlement(); };
 $('backReview').onclick = () => show('review');
 $('printMonths').onclick = () => window.print();
