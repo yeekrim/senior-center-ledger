@@ -527,7 +527,8 @@ function playPrinter(){
     `${x.지출?'-':'+'}${num(x.지출||x.입금).padStart(9)}  ${num(x.잔액).padStart(10)}`);
 
   if(REDUCED){
-    printer.innerHTML = lines.map(l => `<div>${l}</div>`).join('');
+    // 읽은 글자가 들어가므로 마크업이 아니라 글자로 넣는다(아래 애니메이션과 같은 방식).
+    printer.replaceChildren(...lines.map(l => { const d = document.createElement('div'); d.textContent = l; return d; }));
     tasks.forEach(t => t.classList.add('done'));
     return finishReading();
   }
@@ -668,9 +669,11 @@ function render(){
     row.innerHTML = `<button type="button" class="rowline" aria-expanded="${열림}" aria-controls="e${x.index}">
       <i class="num">${x.index+1}</i>
       <i class="date">${날짜미정(x) ? '날짜 고르기' : ymd(x.date)}</i>
-      <span class="memo" data-amt="${x.지출?'지출':'입금'} ${won(x.지출||x.입금)}">${x.사용내역 || '내역 없음'}</span>
+      <span class="memo" data-amt="${x.지출?'지출':'입금'} ${won(x.지출||x.입금)}"></span>
       <i class="amt ${x.지출?'out':'in'}">${x.지출?'−':'+'}${won(x.지출||x.입금)}</i>
       <i class="bal">${won(x.잔액)}</i></button>`;
+    // 사용내역은 OCR이 읽었거나 사람이 적은 글자라 마크업이 아니라 글자로 넣는다.
+    row.querySelector('.memo').textContent = x.사용내역 || '내역 없음';
     row.querySelector('.rowline').onclick = () => { 여는줄 = 열림 ? null : x.index; render(); };
     if(열림) row.appendChild(고치기칸(x));
 
@@ -679,13 +682,15 @@ function render(){
       w.className = 'fix';
       const 방향 = x.지출 ? '지출' : '입금', 이전 = x.기대잔액 - x.입금 + x.지출;
       w.innerHTML = `<div class="manual"><div><label for="m${x.index}">이 거래의 가게 이름을 적어 주세요</label>
-        <input type="text" id="m${x.index}" value="${x.사용내역}" placeholder="예: 한창건어물"></div></div>
+        <input type="text" id="m${x.index}" placeholder="예: 한창건어물"></div></div>
         <details class="more"><summary>빠진 거래가 여러 건이에요</summary>
         <p class="why">통장에 찍힌 첫 거래의 ${방향} 금액을 적어 주세요. 남은 금액은 아래 줄에서 다시 여쭤볼게요.</p>
         <div class="manual"><div><label for="n${x.index}">${방향} 금액</label>
         <input type="text" class="figure" id="n${x.index}" inputmode="numeric" placeholder="${x.지출||x.입금}"></div>
         <button class="btn ghost" data-a="nman">이 금액으로</button></div>
         <p class="why" data-a="nerr" hidden>0보다 큰 금액을 숫자로 적어 주세요</p></details>`;
+      // 따옴표가 섞이면 value="..." 속성이 잘리므로 값은 속성으로 넣는다(고치기칸과 같은 방식).
+      w.querySelector(`#m${x.index}`).value = x.사용내역 || '';
       w.querySelector(`#m${x.index}`).addEventListener('input', e => { rows[x.index].사용내역 = e.target.value; });
       w.querySelector('[data-a=nman]').onclick = () => {
         const v = parseInt(w.querySelector(`#n${x.index}`).value.replace(/[^\d]/g,''),10);
@@ -820,11 +825,13 @@ async function renderSettlement(){
   r.미정.forEach(p => {
     const el = document.createElement('div');
     el.className = 'pend' + (p.결정 ? '' : ' todo');
-    el.innerHTML = `<span class="what"><i>${md(p.date)}</i>${p.사용내역 || '내역 없음'}<b>+${won(p.금액)}</b></span>
+    el.innerHTML = `<span class="what"><i>${md(p.date)}</i><b>+${won(p.금액)}</b></span>
       <span class="acts">
         <button class="btn" data-v="수입" aria-pressed="${p.결정==='수입'}">수입</button>
         <button class="btn" data-v="차감" aria-pressed="${p.결정==='차감'}">집행액에서 빼기</button>
       </span>`;
+    // 사용내역은 읽은 글자라 마크업이 아니라 글자로 넣는다.
+    el.querySelector('.what b').before(p.사용내역 || '내역 없음');
     el.querySelectorAll('button').forEach(b => b.onclick = () => { 결정[p.index] = b.dataset.v; renderSettlement(); });
     box.appendChild(el);
   });
