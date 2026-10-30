@@ -850,10 +850,15 @@ async function renderSettlement(){
   $('pendingSheet').hidden = r.미정.length === 0;
   $('pCount').textContent = `${r.미정.length}건`;
   const box = $('pending');
+  // 다시 그리면 누른 버튼이 지워져 초점이 맨 위로 간다(확인하기 화면과 같은 문제).
+  // 초점이 있던 입금과 버튼을 기억했다가 같은 버튼으로 되돌린다.
+  const 있던버튼 = document.activeElement?.closest('#pending .pend [data-v]');
+  const 있던입금 = 있던버튼?.closest('.pend').dataset.i, 있던값 = 있던버튼?.dataset.v;
   box.innerHTML = '';
   r.미정.forEach(p => {
     const el = document.createElement('div');
     el.className = 'pend' + (p.결정 ? '' : ' todo');
+    el.dataset.i = p.index;
     el.innerHTML = `<span class="what"><i>${md(p.date)}</i><b>+${won(p.금액)}</b></span>
       <span class="acts">
         <button class="btn" data-v="수입" aria-pressed="${p.결정==='수입'}">수입</button>
@@ -864,6 +869,7 @@ async function renderSettlement(){
     el.querySelectorAll('button').forEach(b => b.onclick = () => { 결정[p.index] = b.dataset.v; renderSettlement(); });
     box.appendChild(el);
   });
+  if(있던입금 !== undefined) box.querySelector(`.pend[data-i="${있던입금}"] [data-v="${있던값}"]`)?.focus();
 
   // 남은 일 안내. 완료되기 전에는 숫자를 보여주지 않는다 — 틀린 숫자를 옮겨 적지 않도록.
   const 할일 = [];
