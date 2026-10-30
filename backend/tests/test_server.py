@@ -22,6 +22,16 @@ def test_index_serves_html():
     assert "text/html" in r.headers["content-type"]
 
 
+def test_index_assets_are_served():
+    """index.html이 부르는 스타일 · 스크립트가 맞는 종류로 나가야 화면이 그려진다."""
+    page = client.get("/").text
+    for path, kind in (("/app.css", "text/css"), ("/app.js", "text/javascript")):
+        assert f'"{path[1:]}"' in page
+        r = client.get(path)
+        assert r.status_code == 200
+        assert kind in r.headers["content-type"]
+
+
 def test_demo_review_shape():
     r = client.get("/api/review")
     assert r.status_code == 200

@@ -5,7 +5,7 @@
 
 화면(frontend/index.html)은 아래 API에서 데이터를 받는다. 판정과 정산은 서버에서만 한다:
 
-  GET  /              프론트엔드(frontend/index.html)
+  GET  /              프론트엔드(frontend/index.html, 스타일 · 스크립트는 /app.css · /app.js)
   GET  /api/accounts  통장 종류(운영비 · 부식비 · 냉난방비)와 보고서에 적는 이름
   GET  /api/review    데모 검토 데이터(실제 OCR fixture로 만든 것)
   POST /api/review    통장 사진 여러 장을 올리면 OCR→파싱→병합→검토 결과를 돌려준다
@@ -65,6 +65,17 @@ app = FastAPI(title="통장 정리 도우미", lifespan=lifespan)
 @app.get("/")
 def index():
     return FileResponse(FRONTEND / "index.html")
+
+
+# 화면의 스타일과 스크립트. 폴더 전체를 열지 않고 이 두 파일만 내보낸다.
+@app.get("/app.css")
+def app_css():
+    return FileResponse(FRONTEND / "app.css", media_type="text/css")
+
+
+@app.get("/app.js")
+def app_js():
+    return FileResponse(FRONTEND / "app.js", media_type="text/javascript")
 
 
 @app.get("/api/accounts")

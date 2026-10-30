@@ -1,0 +1,199 @@
+/* 어르신이 휴대폰으로 보는 화면이다. 본문 22px, 가장 작은 글자도 18px 아래로 내리지 않는다.
+   강조색은 파란색 하나, 확인이 필요한 곳만 빨간색. 카드마다 진한 버튼은 하나만 둔다. */
+:root{
+  --bg:#F2F4F6;
+  --card:#FFFFFF;
+  --line:#E5E8EB;
+  --ink:#191F28;
+  --ink-soft:#4E5968;
+  --blue:#1B64DA;
+  --blue-soft:#E8F1FD;
+  --red:#D92D20;
+  --red-soft:#FDECEB;
+  --green:#0E7C3A;
+  --green-soft:#E6F4EC;
+  --sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic",sans-serif;
+  --r:20px;
+}
+*{box-sizing:border-box}
+/* display를 지정한 요소(.steps 등)에서 hidden 속성이 무시되는 것을 막는다 */
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:22px;line-height:1.55;-webkit-text-size-adjust:100%;word-break:keep-all}
+.app{max-width:880px;margin:0 auto;padding:0 16px 96px}
+b{font-weight:800}
+
+/* ── 상단 ─────────────────────────────────── */
+.brand{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:22px 4px 14px;flex-wrap:wrap}
+.brand b{font-size:24px;letter-spacing:-.02em}
+.linkbtn{background:none;border:0;padding:10px 4px;font:inherit;font-size:20px;font-weight:700;color:var(--blue);cursor:pointer}
+
+.steps{display:flex;gap:8px;margin:0 0 20px;padding:0;list-style:none}
+.steps div{flex:1;padding:12px 6px;text-align:center;font-size:18px;font-weight:700;color:var(--ink-soft);background:var(--card);border-radius:14px}
+.steps div.on{background:var(--blue);color:#fff}
+.steps div.past{background:var(--blue-soft);color:var(--blue)}
+
+/* ── 카드 ─────────────────────────────────── */
+.sheet{background:var(--card);border-radius:var(--r);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.sheet+.sheet{margin-top:16px}
+/* 정산 화면: '정해 주실 입금' 카드와 보고서 표 카드 사이 (서로 다른 부모라 위 규칙이 안 걸린다) */
+#pendingSheet:not([hidden])+#report{margin-top:16px}
+.sheet-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:24px 24px 12px}
+.sheet-head h2{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:0}
+.sheet-head span{font-size:18px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.pad{padding:28px 24px}
+h1{font-size:clamp(32px,6.4vw,42px);font-weight:800;letter-spacing:-.03em;line-height:1.25;margin:0 0 14px}
+.lede{font-size:22px;color:var(--ink-soft);margin:0;max-width:30em}
+
+/* ── 버튼 ─────────────────────────────────── */
+button{font:inherit}
+.btn{min-height:64px;padding:14px 26px;font-size:22px;font-weight:700;border:0;border-radius:16px;background:var(--blue);color:#fff;cursor:pointer;text-align:center}
+.btn.ghost,.btn.choice{background:var(--card);color:var(--blue);box-shadow:inset 0 0 0 2px var(--blue)}
+.btn.quiet{background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 2px #D1D6DB}
+.btn:disabled{background:#B0B8C1;color:#fff;box-shadow:none;cursor:not-allowed}
+.btn:active:not(:disabled){transform:scale(.98)}
+.btn:focus-visible,input:focus-visible,summary:focus-visible,label.drop:focus-within{outline:4px solid #F5A623;outline-offset:3px}
+.acts{display:flex;flex-wrap:wrap;gap:12px}
+.foot{padding:0 24px 28px}
+.foot.acts .btn{flex:1 1 220px}
+
+/* ── 1. 사진 올리기 ───────────────────────── */
+.pick{border:0;margin:0;padding:6px 24px 20px}
+.pick legend{font-size:22px;font-weight:800;padding:0;margin-bottom:12px}
+.choices{display:flex;flex-wrap:wrap;gap:10px}
+.choices label{position:relative;cursor:pointer}
+.choices input[type=radio]{position:absolute;opacity:0;width:1px;height:1px}
+.choices span{display:flex;align-items:center;min-height:64px;padding:12px 22px;font-size:22px;font-weight:700;border-radius:16px;background:var(--bg);color:var(--ink)}
+.choices input:checked+span{background:var(--blue);color:#fff}
+.choices input:focus-visible+span{outline:4px solid #F5A623;outline-offset:3px}
+.choices label.year{display:flex;align-items:center;gap:8px}
+.choices label.year input{width:120px;text-align:center}
+.choices label.year span{background:none;padding:0;min-height:0}
+label.drop{display:block;margin:4px 24px 16px;padding:40px 20px;text-align:center;cursor:pointer;border:3px dashed #B0B8C1;border-radius:var(--r);background:var(--bg)}
+label.drop:hover,label.drop.over{border-color:var(--blue);background:var(--blue-soft)}
+label.drop strong{display:block;font-size:26px;font-weight:800;color:var(--blue);margin-bottom:6px}
+label.drop small{color:var(--ink-soft);font-size:20px}
+label.drop input{position:absolute;width:1px;height:1px;opacity:0}
+.tip{margin:0 24px 20px;padding:16px 18px;font-size:20px;color:var(--ink-soft);background:var(--bg);border-radius:14px}
+.tip.error{background:var(--red-soft);color:var(--red);font-weight:700}
+.shots{display:flex;flex-wrap:wrap;gap:12px;padding:0 24px 20px}
+.shot{width:112px;margin:0;border-radius:12px;overflow:hidden;background:var(--bg)}
+.shot img{display:block;width:100%;height:140px;object-fit:cover}
+.shot p{margin:0;padding:6px;font-size:18px;color:var(--ink-soft);text-align:center}
+
+/* ── 2. 읽는 중 ──────────────────────────── */
+.tasks{list-style:none;margin:0 0 24px;padding:0}
+.tasks li{display:flex;align-items:center;gap:14px;padding:12px 0;font-size:22px;color:#8B95A1}
+.tasks li.on{color:var(--ink);font-weight:800}
+.tasks li.done{color:var(--ink)}
+.dot{width:18px;height:18px;border-radius:50%;border:3px solid #B0B8C1;flex:none}
+.tasks li.on .dot{border-color:var(--blue);background:var(--blue)}
+.tasks li.done .dot{border-color:var(--green);background:var(--green)}
+.print{background:var(--bg);border-radius:14px;min-height:160px;max-height:300px;overflow:hidden;padding:8px 0}
+.print div{font-size:18px;padding:6px 16px;white-space:pre;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.print div.pending{white-space:normal;color:var(--ink-soft);font-size:20px;padding:22px 16px}
+.print div.pending p{margin:0 0 14px;font-size:22px;font-weight:700;color:var(--ink)}
+.progress{height:14px;border-radius:7px;background:var(--line);overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:var(--blue);transition:width .4s}
+
+/* ── 3. 확인하기 ──────────────────────────── */
+.callout{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;padding:22px 24px;margin-bottom:16px;background:var(--red-soft);border-radius:var(--r)}
+.callout p{margin:0;font-size:24px;font-weight:800;color:var(--red)}
+.callout.done{background:var(--green-soft)}
+.callout.done p{color:var(--green)}
+.cols{display:none}
+.row{position:relative;border-top:1px solid var(--line)}
+.rowline{display:grid;grid-template-columns:1fr auto;grid-template-areas:"d b" "m b";column-gap:16px;row-gap:2px;align-items:center;padding:18px 24px}
+button.rowline{width:100%;min-height:64px;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
+button.rowline:focus-visible{outline:4px solid #F5A623;outline-offset:-4px}
+.edit fieldset{border:0;margin:14px 0 0;padding:0}
+.edit legend{font-size:20px;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+.edit>.acts{margin-top:18px}
+.num{display:none}
+.date{grid-area:d;font-style:normal;font-size:18px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.memo{grid-area:m;font-size:22px;font-weight:700;overflow-wrap:anywhere}
+.memo::after{content:attr(data-amt);display:block;font-size:20px;font-weight:600;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.amt{display:none}
+.bal{grid-area:b;font-style:normal;text-align:right;font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+.bal::before{content:"잔액";display:block;font-size:18px;font-weight:600;color:var(--ink-soft)}
+.row.flag{background:var(--red-soft);border-top:0;margin:12px;border-radius:16px;box-shadow:inset 0 0 0 2px var(--red)}
+.row.flag .bal{color:var(--red)}
+.row.fixed .bal{color:var(--green)}
+.fix{padding:0 24px 22px}
+.fix p{margin:0 0 16px;font-size:22px;font-weight:700}
+.fix .acts{flex-direction:column;align-items:stretch}
+.fix .acts .btn{width:100%}
+.fix .why{font-size:18px;font-weight:500;color:var(--ink-soft);margin:14px 0 0}
+details.more{margin-top:14px}
+details.more summary{cursor:pointer;font-size:20px;font-weight:700;color:var(--blue);padding:10px 0;list-style:none}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::after{content:" ›"}
+details.more[open] summary::after{content:" ⌄"}
+details.more .acts{margin-top:8px}
+.manual{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-top:14px}
+.manual>div{flex:1 1 220px}
+.manual label{font-size:20px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:6px}
+.manual .btn{flex:0 0 auto}
+input[type=text]{font:inherit;font-size:22px;padding:14px 16px;min-height:64px;border:2px solid #D1D6DB;border-radius:14px;background:#fff;color:var(--ink);width:100%}
+input[type=text]:focus{border-color:var(--blue)}
+input.figure{font-variant-numeric:tabular-nums}
+
+/* ── 4. 정산하기 ─────────────────────────── */
+.pend{padding:18px 24px;border-top:1px solid var(--line)}
+.pend.todo{background:var(--red-soft)}
+.pend .what{display:block;font-size:22px;font-weight:700;margin-bottom:12px}
+.pend .what i{font-style:normal;font-size:18px;font-weight:600;color:var(--ink-soft);display:block}
+.pend .what b{color:var(--blue);margin-left:8px;font-variant-numeric:tabular-nums}
+.pend .acts .btn{flex:1 1 200px}
+.pend .btn[aria-pressed=false]{background:var(--card);color:var(--blue);box-shadow:inset 0 0 0 2px var(--blue)}
+.tablewrap{overflow-x:auto;padding:0 12px 8px}
+table.form{width:100%;border-collapse:collapse;font-size:22px}
+table.form th,table.form td{padding:14px 12px;border-bottom:1px solid var(--line);word-break:keep-all}
+table.form th{font-size:18px;font-weight:700;color:var(--ink-soft);text-align:right;white-space:nowrap}
+table.form th:first-child{text-align:left}
+table.form th small{display:block;font-size:18px;font-weight:500}
+table.form td{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+table.form td:first-child{text-align:left;font-weight:800;min-width:3.6em}
+table.form tr.total td{border-top:2px solid var(--ink);border-bottom:0;background:var(--bg)}
+table.form td.none{color:transparent}
+.note{margin:0;padding:18px 24px 26px;color:var(--ink-soft);font-size:20px}
+footer{padding:28px 4px;font-size:18px;color:var(--ink-soft)}
+
+@media (min-width:721px){
+  .cols{display:grid;grid-template-columns:150px 1fr 170px 170px;gap:12px;padding:8px 24px 10px;font-size:18px;font-weight:700;color:var(--ink-soft)}
+  .cols i{font-style:normal}.cols .r{text-align:right}.cols i:first-child{display:none}
+  .rowline{grid-template-columns:150px 1fr 170px 170px;grid-template-areas:"d m a b";column-gap:12px}
+  .date{font-size:20px}
+  .memo::after{content:none}
+  .amt{display:block;grid-area:a;font-style:normal;text-align:right;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+  .amt.in{color:var(--blue)}
+  .bal::before{content:none}
+}
+@media (max-width:720px){
+  body{font-size:21px}
+  .steps{gap:6px}
+  .steps div{font-size:18px;padding:10px 2px}
+  .pad,.fix,.foot,.note,.pick,.pend,.sheet-head{padding-left:18px;padding-right:18px}
+  label.drop,.tip{margin-left:18px;margin-right:18px}
+  .rowline{padding:16px 18px}
+  /* 표를 가로로 밀어 보게 하지 않는다. 한 줄(한 달)을 카드 한 장으로 세운다. */
+  .tablewrap{padding:0 18px 8px}
+  table.form thead{display:none}
+  table.form,table.form tbody,table.form tr,table.form td{display:block;width:100%}
+  table.form tr{padding:12px 0;border-bottom:1px solid var(--line)}
+  table.form td{display:flex;justify-content:space-between;gap:12px;border:0;padding:4px 0;font-size:22px}
+  table.form td::before{content:attr(data-label);font-weight:600;color:var(--ink-soft);font-size:20px}
+  table.form td:first-child{font-size:24px;padding-bottom:6px}
+  table.form td:first-child::before{content:none}
+  table.form tr.total{border-bottom:0;background:var(--bg);border-radius:14px;padding:12px 14px;margin-top:8px}
+  table.form tr.total td{border:0;background:none}
+  table.form td.none{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media print{
+  body{background:#fff;font-size:13pt}
+  .brand,.steps,.acts,.foot,footer,.callout,#s-upload,#s-reading,#s-review,#pendingSheet{display:none!important}
+  .app{max-width:none;padding:0}
+  .sheet{box-shadow:none}
+  table.form th,table.form td{border:1px solid #999}
+}
