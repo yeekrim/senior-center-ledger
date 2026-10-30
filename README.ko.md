@@ -111,7 +111,10 @@ backend/
     classify.py          입금 → 보조금 / 이자 / 미정
     settlement.py        반기 정산값 (월별 · 총괄 · 검산)
   tests/
-frontend/index.html      화면 (빌드 없이 파일 하나)
+frontend/                화면 (빌드 없음)
+  index.html             마크업
+  app.css                스타일
+  app.js                 화면 동작 (판정 · 정산은 서버에 묻는다)
 ```
 
 ## 한계
