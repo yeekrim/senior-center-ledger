@@ -23,6 +23,7 @@ OK = "정상"
 BALANCE_MISREAD = "잔액오독"
 MISSING_ROW = "거래누락"
 UNKNOWN = "확인필요"
+CONFIRMED = "확인함"     # 안 맞지만 사람이 통장을 보고 찍힌 값이 맞다고 한 행
 
 
 def _amounts(row):
@@ -58,18 +59,25 @@ def _suggestion(status: str, expected: int, actual: int):
             "설명": "앞뒤 잔액이 모두 맞지 않습니다. 통장 사진을 직접 확인해 주세요."}
 
 
-def review_transactions(rows, opening_balance: int = 0):
+def review_transactions(rows, opening_balance: int = 0, confirmed=()):
     """행마다 상태와 수정 제안을 붙인 검토 목록을 만든다.
+
+    confirmed: 사람이 통장을 보고 '찍힌 값이 맞다'고 한 행 번호들. 이 행은 안 맞아도
+    확인함으로 두고, 찍힌 잔액을 그대로 다음 행에 물려준다(사람의 판단을 덮어쓰지 않는다).
+    잔액 연쇄가 깨진 것은 그대로이므로 정산(settle)의 검산에서는 여전히 걸린다.
 
     반환: {"items": [...], "summary": {상태별 건수}}
     """
     items = []
     prev = opening_balance
+    confirmed = set(confirmed)
 
     for index, row in enumerate(rows):
         입금, 지출, 잔액 = _amounts(row)
         expected = prev + 입금 - 지출
         status = OK if expected == 잔액 else _classify(rows, index, expected, 잔액)
+        if status != OK and index in confirmed:
+            status = CONFIRMED
 
         item = {
             "index": index,
@@ -84,7 +92,7 @@ def review_transactions(rows, opening_balance: int = 0):
             "이전잔액": prev,
             "기대잔액": expected,
         }
-        if status != OK:
+        if status not in (OK, CONFIRMED):
             item["제안"] = _suggestion(status, expected, 잔액)
         items.append(item)
 
@@ -94,6 +102,6 @@ def review_transactions(rows, opening_balance: int = 0):
         prev = expected if status == BALANCE_MISREAD else 잔액
 
     summary = {"전체": len(items)}
-    for status in (OK, BALANCE_MISREAD, MISSING_ROW, UNKNOWN):
+    for status in (OK, BALANCE_MISREAD, MISSING_ROW, UNKNOWN, CONFIRMED):
         summary[status] = sum(1 for item in items if item["상태"] == status)
     return {"items": items, "summary": summary}

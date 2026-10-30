@@ -90,6 +90,28 @@ def test_settlement_rejects_decision_on_non_pending_row():
     assert r.status_code == 400
 
 
+def test_recheck_matches_demo_review():
+    """고치지 않은 목록을 다시 판정하면 처음 판정과 같아야 한다."""
+    items = client.get("/api/review").json()["items"]
+    r = client.post("/api/recheck", json={"items": items, "시작잔액": 0})
+    assert r.status_code == 200
+    again = r.json()["items"]
+    assert [(x["상태"], x["기대잔액"]) for x in again] == \
+           [(x["상태"], x["기대잔액"]) for x in items]
+
+
+def test_recheck_marks_confirmed_rows():
+    items = client.get("/api/review").json()["items"]
+    틀린줄 = next(x["index"] for x in items if x["상태"] != "정상")
+    r = client.post("/api/recheck", json={"items": items, "확인함": [틀린줄]})
+    assert r.json()["items"][틀린줄]["상태"] == "확인함"
+
+
+def test_recheck_rejects_item_without_balance():
+    r = client.post("/api/recheck", json={"items": [{"date": "20260101"}]})
+    assert r.status_code == 422
+
+
 def _wait_job(job_id, seconds=10):
     import time
     deadline = time.time() + seconds
